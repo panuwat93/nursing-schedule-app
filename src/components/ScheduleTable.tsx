@@ -14,13 +14,20 @@ import {
   useTheme,
   useMediaQuery,
   Toolbar,
-  // Button,
+  Button,
   ButtonGroup,
   IconButton,
   Tooltip,
   Divider,
-  // ToggleButton,
-  // ToggleButtonGroup,
+  ToggleButton,
+  ToggleButtonGroup,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Grid,
+  Card,
+  CardContent,
 } from '@mui/material';
 import {
   FormatBold,
@@ -29,8 +36,6 @@ import {
   FormatColorFill,
   FormatColorText,
   Clear,
-  // Undo,
-  // Redo,
   Add,
   Remove,
   Refresh,
@@ -70,12 +75,10 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
   const [editValue, setEditValue] = useState<string>('');
   const [selectedCells, setSelectedCells] = useState<{ nurseId: string; date: string; shiftType?: 'morning' | 'afternoon' | 'night' }[]>([]);
   const [showColorPicker, setShowColorPicker] = useState<'background' | 'text' | null>(null);
-
-
-
-
-
-
+  
+  // โหมดการดู
+  const [viewMode, setViewMode] = useState<'summary' | 'individual'>('summary');
+  const [selectedStaff, setSelectedStaff] = useState<string>('');
 
   // สีให้เลือก
   const colorOptions = [
@@ -118,8 +121,6 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
     const shifts = nurse?.type === 'nurse' ? nurseShifts : assistantShifts;
     return shifts.find(s => s.id === entry.shiftId) || null;
   };
-
-
 
   // Focus input when editing starts
   useEffect(() => {
@@ -272,33 +273,6 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
     onScheduleChange(newSchedule);
   };
 
-  // const resetFormatting = () => {
-  //   if (selectedCells.length === 0) return;
-    
-  //   const newSchedule = [...schedule];
-    
-  //   selectedCells.forEach(({ nurseId, date, shiftType }) => {
-  //     const entryIndex = newSchedule.findIndex(e => e.nurseId === nurseId && e.date === date && e.shiftType === shiftType);
-      
-  //     if (entryIndex >= 0) {
-  //       // รีเซ็ตการจัดรูปแบบเป็นค่าเริ่มต้น
-  //       newSchedule[entryIndex] = {
-  //         ...newSchedule[entryIndex],
-  //         formatting: {
-  //           bold: false,
-  //           italic: false,
-  //           underline: false,
-  //           backgroundColor: '',
-  //           textColor: '',
-  //           fontSize: 14
-  //         }
-  //       };
-  //     }
-  //   });
-    
-  //   onScheduleChange(newSchedule);
-  // };
-
   const resetTable = () => {
     // เคลียร์ตารางทั้งหมดให้เป็นตารางเปล่า
     onScheduleChange([]);
@@ -327,6 +301,135 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
       textColor: '',
       fontSize: 14
     };
+  };
+
+  const renderViewModeSelector = () => {
+    return (
+      <Box sx={{ mb: 2, p: 2, backgroundColor: '#f8f9fa', borderRadius: 1 }}>
+        <Typography variant="h6" sx={{ fontFamily: 'Kanit', mb: 2 }}>
+          โหมดการดู
+        </Typography>
+        <Grid container spacing={2} alignItems="center">
+          <Grid item>
+            <ToggleButtonGroup
+              value={viewMode}
+              exclusive
+              onChange={(e, newMode) => {
+                if (newMode !== null) {
+                  setViewMode(newMode);
+                  if (newMode === 'summary') {
+                    setSelectedStaff('');
+                  }
+                }
+              }}
+              sx={{ fontFamily: 'Kanit' }}
+            >
+              <ToggleButton value="summary">
+                ตารางรวม
+              </ToggleButton>
+              <ToggleButton value="individual">
+                รายบุคคล
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </Grid>
+          
+          {viewMode === 'individual' && (
+            <Grid item>
+              <FormControl sx={{ minWidth: 200 }}>
+                <InputLabel sx={{ fontFamily: 'Kanit' }}>เลือกเจ้าหน้าที่</InputLabel>
+                <Select
+                  value={selectedStaff}
+                  onChange={(e) => setSelectedStaff(e.target.value)}
+                  label="เลือกเจ้าหน้าที่"
+                  sx={{ fontFamily: 'Kanit' }}
+                >
+                  {allStaff.map((staff) => (
+                    <MenuItem key={staff.id} value={staff.id} sx={{ fontFamily: 'Kanit' }}>
+                      {staff.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+          )}
+        </Grid>
+      </Box>
+    );
+  };
+
+  const renderIndividualCalendar = () => {
+    if (!selectedStaff) {
+      return (
+        <Box sx={{ textAlign: 'center', py: 4 }}>
+          <Typography variant="h6" sx={{ fontFamily: 'Kanit', color: '#666' }}>
+            กรุณาเลือกเจ้าหน้าที่เพื่อดูตารางเวร
+          </Typography>
+        </Box>
+      );
+    }
+
+    const staff = allStaff.find(s => s.id === selectedStaff);
+    if (!staff) return null;
+
+    const staffSchedule = schedule.filter(s => s.nurseId === selectedStaff);
+    const daysInMonth = new Date(year, month, 0).getDate();
+
+    return (
+      <Box>
+        <Typography variant="h5" sx={{ fontFamily: 'Kanit', mb: 2, textAlign: 'center' }}>
+          ตารางเวรของ {staff.name} - {format(new Date(year, month - 1), 'MMMM yyyy', { locale: th })}
+        </Typography>
+        
+        <Grid container spacing={1}>
+          {Array.from({ length: daysInMonth }, (_, i) => {
+            const day = i + 1;
+            const dateStr = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+            const date = new Date(year, month - 1, day);
+            const dayName = getDayName(date);
+            const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+            
+            const daySchedule = staffSchedule.filter(s => s.date === dateStr);
+            const shift = daySchedule.length > 0 ? getShiftForNurse(selectedStaff, dateStr) : null;
+            
+            return (
+              <Grid item xs={6} sm={4} md={3} lg={2} key={day}>
+                <Card 
+                  sx={{ 
+                    height: 120,
+                    backgroundColor: isWeekend ? '#ffebee' : '#ffffff',
+                    border: '1px solid #e0e0e0',
+                    '&:hover': { backgroundColor: isWeekend ? '#ffcdd2' : '#f5f5f5' }
+                  }}
+                >
+                  <CardContent sx={{ p: 1, textAlign: 'center' }}>
+                    <Typography variant="h6" sx={{ fontFamily: 'Kanit', fontSize: '1.1rem' }}>
+                      {day}
+                    </Typography>
+                    <Typography variant="caption" sx={{ fontFamily: 'Kanit', color: isWeekend ? '#d32f2f' : '#666' }}>
+                      {dayName}
+                    </Typography>
+                    {shift && (
+                      <Box sx={{ mt: 1 }}>
+                        <Chip
+                          label={shift.code}
+                          size="small"
+                          sx={{ 
+                            fontFamily: 'Kanit',
+                            backgroundColor: shift.backgroundColor || '#e3f2fd',
+                            color: shift.color || '#000',
+                            fontSize: '0.75rem'
+                          }}
+                        />
+                      </Box>
+                    )}
+                  </CardContent>
+                </Card>
+              </Grid>
+            );
+          })}
+        </Grid>
+      </Box>
+    );
   };
 
   const renderFormattingToolbar = () => {
@@ -1254,16 +1357,21 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
 
   return (
     <Box sx={{ width: '100%', overflow: 'hidden' }}>
-      {renderFormattingToolbar()}
-      <Typography variant="h6" sx={{ mb: 2, fontFamily: 'Kanit' }}>
-        ตารางเวรประจำเดือน {format(new Date(year, month - 1), 'MMMM yyyy', { locale: th })}
-      </Typography>
+      {renderViewModeSelector()}
+      {viewMode === 'individual' ? (
+        renderIndividualCalendar()
+      ) : (
+        <>
+          {renderFormattingToolbar()}
+          <Typography variant="h6" sx={{ mb: 2, fontFamily: 'Kanit' }}>
+            ตารางเวรประจำเดือน {format(new Date(year, month - 1), 'MMMM yyyy', { locale: th })}
+          </Typography>
 
-      <TableContainer 
-        component={Paper} 
-        sx={{ 
-          maxHeight: 600,
-          width: '100%',
+          <TableContainer 
+            component={Paper} 
+            sx={{ 
+              maxHeight: 600,
+              width: '100%',
           overflowX: 'hidden',
           overflowY: 'auto',
           '& .MuiTable-root': {
@@ -1866,8 +1974,8 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
           </TableBody>
         </Table>
       </TableContainer>
-
-
+        </>
+      )}
     </Box>
   );
 };
