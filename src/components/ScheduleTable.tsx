@@ -387,8 +387,13 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
             const dayName = getDayName(date);
             const isWeekend = date.getDay() === 0 || date.getDay() === 6;
             
-            // ดึงเวรจากตารางปกติ
-            const shift = getShiftForNurse(selectedStaff, dateStr);
+            // ดึงเวรเช้าและเวรบ่ายจากตารางปกติ
+            const morningShift = getShiftForNurse(selectedStaff, dateStr, 'morning');
+            const afternoonShift = getShiftForNurse(selectedStaff, dateStr, 'afternoon');
+            
+            // สำหรับผู้ช่วยพาร์ทไทม์ (ไม่มี shiftType)
+            const staff = allStaff.find(s => s.id === selectedStaff);
+            const partTimeShift = staff?.isPartTime ? getShiftForNurse(selectedStaff, dateStr) : null;
             
             return (
               <Grid item xs={6} sm={4} md={3} lg={2} key={day}>
@@ -407,15 +412,57 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
                     <Typography variant="caption" sx={{ fontFamily: 'Kanit', color: isWeekend ? '#d32f2f' : '#666' }}>
                       {dayName}
                     </Typography>
-                    {shift && (
-                      <Box sx={{ mt: 1 }}>
+                    
+                    {/* แสดงเวรเช้า */}
+                    {morningShift && (
+                      <Box sx={{ mt: 0.5 }}>
                         <Chip
-                          label={shift.code}
+                          label={morningShift.id === 'other' && schedule.find(e => e.nurseId === selectedStaff && e.date === dateStr && e.shiftType === 'morning')?.customText ? 
+                            schedule.find(e => e.nurseId === selectedStaff && e.date === dateStr && e.shiftType === 'morning')?.customText : 
+                            morningShift.code}
                           size="small"
                           sx={{ 
                             fontFamily: 'Kanit',
-                            backgroundColor: shift.backgroundColor || '#e3f2fd',
-                            color: shift.color || '#000',
+                            backgroundColor: schedule.find(e => e.nurseId === selectedStaff && e.date === dateStr && e.shiftType === 'morning')?.formatting?.backgroundColor || morningShift.backgroundColor || '#e3f2fd',
+                            color: schedule.find(e => e.nurseId === selectedStaff && e.date === dateStr && e.shiftType === 'morning')?.formatting?.textColor || morningShift.color || '#000',
+                            fontSize: '0.6rem',
+                            height: '16px'
+                          }}
+                        />
+                      </Box>
+                    )}
+                    
+                    {/* แสดงเวรบ่าย */}
+                    {afternoonShift && (
+                      <Box sx={{ mt: 0.5 }}>
+                        <Chip
+                          label={afternoonShift.id === 'other' && schedule.find(e => e.nurseId === selectedStaff && e.date === dateStr && e.shiftType === 'afternoon')?.customText ? 
+                            schedule.find(e => e.nurseId === selectedStaff && e.date === dateStr && e.shiftType === 'afternoon')?.customText : 
+                            afternoonShift.code}
+                          size="small"
+                          sx={{ 
+                            fontFamily: 'Kanit',
+                            backgroundColor: schedule.find(e => e.nurseId === selectedStaff && e.date === dateStr && e.shiftType === 'afternoon')?.formatting?.backgroundColor || afternoonShift.backgroundColor || '#e3f2fd',
+                            color: schedule.find(e => e.nurseId === selectedStaff && e.date === dateStr && e.shiftType === 'afternoon')?.formatting?.textColor || afternoonShift.color || '#000',
+                            fontSize: '0.6rem',
+                            height: '16px'
+                          }}
+                        />
+                      </Box>
+                    )}
+                    
+                    {/* สำหรับผู้ช่วยพาร์ทไทม์ */}
+                    {partTimeShift && (
+                      <Box sx={{ mt: 0.5 }}>
+                        <Chip
+                          label={partTimeShift.id === 'other' && schedule.find(e => e.nurseId === selectedStaff && e.date === dateStr)?.customText ? 
+                            schedule.find(e => e.nurseId === selectedStaff && e.date === dateStr)?.customText : 
+                            partTimeShift.code}
+                          size="small"
+                          sx={{ 
+                            fontFamily: 'Kanit',
+                            backgroundColor: schedule.find(e => e.nurseId === selectedStaff && e.date === dateStr)?.formatting?.backgroundColor || partTimeShift.backgroundColor || '#e3f2fd',
+                            color: schedule.find(e => e.nurseId === selectedStaff && e.date === dateStr)?.formatting?.textColor || partTimeShift.color || '#000',
                             fontSize: '0.75rem'
                           }}
                         />
