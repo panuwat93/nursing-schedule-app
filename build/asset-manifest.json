@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/nursing-schedule-app/static/css/main.1bf5085b.css",
+    "main.js": "/nursing-schedule-app/static/js/main.8762138f.js",
+    "index.html": "/nursing-schedule-app/index.html",
+    "main.1bf5085b.css.map": "/nursing-schedule-app/static/css/main.1bf5085b.css.map",
+    "main.8762138f.js.map": "/nursing-schedule-app/static/js/main.8762138f.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.1bf5085b.css",
+    "static/js/main.8762138f.js"
+  ]
+}
