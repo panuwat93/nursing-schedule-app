@@ -192,22 +192,77 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
     return allStaff.find(n => n.id === nurseId)?.name || '';
   };
 
-  // กรองเจ้าหน้าที่ตามเวรและวันที่ที่เลือก
+  // กรองเจ้าหน้าที่ตามเวรและวันที่ที่เลือก (ใช้ตรรกะเดียวกับตารางเวร)
   const getStaffByShift = (shift: string, date: string) => {
     if (!shift || !date) return [];
 
-    const shiftMapping: { [key: string]: string[] } = {
-      morning: ['morning', 'morning_special', 'morning_afternoon'],
-      afternoon: ['afternoon', 'morning_afternoon', 'night_afternoon'], 
-      night: ['night', 'night_afternoon']
-    };
+    const staffInShift: typeof allStaff = [];
 
-    const relevantShifts = shiftMapping[shift] || [];
-    const staffOnShift = schedule
-      .filter(entry => entry.date === date && relevantShifts.includes(entry.shiftId))
-      .map(entry => entry.nurseId);
+    allStaff.forEach(staff => {
+      let shouldInclude = false;
 
-    return allStaff.filter(staff => staffOnShift.includes(staff.id));
+      // ตรวจสอบเวรเช้า
+      const morningShift = schedule.find(e => e.nurseId === staff.id && e.date === date && e.shiftType === 'morning');
+      if (morningShift) {
+        const shiftId = morningShift.shiftId;
+        if (shift === 'morning') {
+          // สำหรับเวรเช้า ไม่นับประนอม (n1) และศิรินทรา (n2) เมื่อขึ้นเวรเช้าปกติ
+          if (shiftId === 'morning' && (staff.id === 'n1' || staff.id === 'n2')) {
+            shouldInclude = false;
+          } else if (['morning', 'morning_special', 'morning_afternoon'].includes(shiftId)) {
+            shouldInclude = true;
+          }
+        } else if (shift === 'afternoon' && ['afternoon', 'morning_afternoon', 'night_afternoon'].includes(shiftId)) {
+          shouldInclude = true;
+        } else if (shift === 'night' && ['night', 'night_afternoon'].includes(shiftId)) {
+          shouldInclude = true;
+        }
+      }
+
+      // ตรวจสอบเวรบ่าย
+      const afternoonShift = schedule.find(e => e.nurseId === staff.id && e.date === date && e.shiftType === 'afternoon');
+      if (afternoonShift) {
+        const shiftId = afternoonShift.shiftId;
+        if (shift === 'morning') {
+          // สำหรับเวรเช้า ไม่นับประนอม (n1) และศิรินทรา (n2) เมื่อขึ้นเวรเช้าปกติ
+          if (shiftId === 'morning' && (staff.id === 'n1' || staff.id === 'n2')) {
+            shouldInclude = false;
+          } else if (['morning', 'morning_special', 'morning_afternoon'].includes(shiftId)) {
+            shouldInclude = true;
+          }
+        } else if (shift === 'afternoon' && ['afternoon', 'morning_afternoon', 'night_afternoon'].includes(shiftId)) {
+          shouldInclude = true;
+        } else if (shift === 'night' && ['night', 'night_afternoon'].includes(shiftId)) {
+          shouldInclude = true;
+        }
+      }
+
+      // สำหรับผู้ช่วยพาร์ทไทม์ (ไม่มี shiftType)
+      if (staff.isPartTime) {
+        const partTimeShift = schedule.find(e => e.nurseId === staff.id && e.date === date && !e.shiftType);
+        if (partTimeShift) {
+          const shiftId = partTimeShift.shiftId;
+          if (shift === 'morning') {
+            // สำหรับเวรเช้า ไม่นับประนอม (n1) และศิรินทรา (n2) เมื่อขึ้นเวรเช้าปกติ
+            if (shiftId === 'morning' && (staff.id === 'n1' || staff.id === 'n2')) {
+              shouldInclude = false;
+            } else if (['morning', 'morning_special', 'morning_afternoon'].includes(shiftId)) {
+              shouldInclude = true;
+            }
+          } else if (shift === 'afternoon' && ['afternoon', 'morning_afternoon', 'night_afternoon'].includes(shiftId)) {
+            shouldInclude = true;
+          } else if (shift === 'night' && ['night', 'night_afternoon'].includes(shiftId)) {
+            shouldInclude = true;
+          }
+        }
+      }
+
+      if (shouldInclude) {
+        staffInShift.push(staff);
+      }
+    });
+
+    return staffInShift;
   };
 
   const formatDate = (dateStr: string) => {
