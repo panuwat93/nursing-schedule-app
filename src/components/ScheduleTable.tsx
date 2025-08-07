@@ -387,6 +387,10 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
             const dayName = getDayName(date);
             const isWeekend = date.getDay() === 0 || date.getDay() === 6;
             
+            // ตรวจสอบวันหยุดชดเชย
+            const publicHoliday = isPublicHoliday(date);
+            const isHoliday = isWeekend || publicHoliday.isHoliday;
+            
             // ดึงเวรเช้าและเวรบ่ายจากตารางปกติ
             const morningShift = getShiftForNurse(selectedStaff, dateStr, 'morning');
             const afternoonShift = getShiftForNurse(selectedStaff, dateStr, 'afternoon');
@@ -400,16 +404,16 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
                 <Card 
                   sx={{ 
                     height: 120,
-                    backgroundColor: isWeekend ? '#ffebee' : '#ffffff',
+                    backgroundColor: isHoliday ? '#ffebee' : '#ffffff',
                     border: '1px solid #e0e0e0',
-                    '&:hover': { backgroundColor: isWeekend ? '#ffcdd2' : '#f5f5f5' }
+                    '&:hover': { backgroundColor: isHoliday ? '#ffcdd2' : '#f5f5f5' }
                   }}
                 >
                   <CardContent sx={{ p: 1, textAlign: 'center' }}>
                     <Typography variant="h6" sx={{ fontFamily: 'Kanit', fontSize: '1.1rem' }}>
                       {day}
                     </Typography>
-                    <Typography variant="caption" sx={{ fontFamily: 'Kanit', color: isWeekend ? '#d32f2f' : '#666' }}>
+                    <Typography variant="caption" sx={{ fontFamily: 'Kanit', color: isHoliday ? '#d32f2f' : '#666' }}>
                       {dayName}
                     </Typography>
                     
