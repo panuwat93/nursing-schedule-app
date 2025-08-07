@@ -183,7 +183,7 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
       const trimmedValue = editValue.trim().toUpperCase();
       
       if (trimmedValue === 'O') {
-        formatting = { textColor: '#ff0000' }; // ตัวอักษรสีแดง
+        formatting = { textColor: '#ff0000', backgroundColor: '#ffffff' }; // ตัวอักษรสีแดงพื้นสีขาว
       } else if (trimmedValue === 'VA') {
         formatting = { backgroundColor: '#ff0000', textColor: '#ffffff' }; // พื้นแดงตัวอักษรสีขาว
       } else if (trimmedValue === 'MB') {
@@ -1071,15 +1071,27 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
       // ตรวจสอบเวรเช้า
       const morningShift = getShiftForNurse(staffId, dateStr, 'morning');
       if (morningShift) {
-        // นับทุกประเภทเวรเป็น 1
-        totalShifts++;
+        // หา entry เพื่อตรวจสอบข้อความที่แสดง
+        const entry = schedule.find(e => e.nurseId === staffId && e.date === dateStr && e.shiftType === 'morning');
+        const displayText = morningShift.id === 'other' && entry?.customText ? entry.customText : morningShift.code;
+        
+        // ไม่นับตัวอักษร O (Off) เป็นเวรรวม
+        if (displayText !== 'O') {
+          totalShifts++;
+        }
       }
 
       // ตรวจสอบเวรบ่าย
       const afternoonShift = getShiftForNurse(staffId, dateStr, 'afternoon');
       if (afternoonShift) {
-        // นับทุกประเภทเวรเป็น 1
-        totalShifts++;
+        // หา entry เพื่อตรวจสอบข้อความที่แสดง
+        const entry = schedule.find(e => e.nurseId === staffId && e.date === dateStr && e.shiftType === 'afternoon');
+        const displayText = afternoonShift.id === 'other' && entry?.customText ? entry.customText : afternoonShift.code;
+        
+        // ไม่นับตัวอักษร O (Off) เป็นเวรรวม
+        if (displayText !== 'O') {
+          totalShifts++;
+        }
       }
 
       // สำหรับผู้ช่วยพาร์ทไทม์ (ไม่มี shiftType)
@@ -1087,8 +1099,14 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
       if (staff?.isPartTime) {
         const shift = getShiftForNurse(staffId, dateStr);
         if (shift) {
-          // นับทุกประเภทเวรเป็น 1
-          totalShifts++;
+          // หา entry เพื่อตรวจสอบข้อความที่แสดง
+          const entry = schedule.find(e => e.nurseId === staffId && e.date === dateStr);
+          const displayText = shift.id === 'other' && entry?.customText ? entry.customText : shift.code;
+          
+          // ไม่นับตัวอักษร O (Off) เป็นเวรรวม
+          if (displayText !== 'O') {
+            totalShifts++;
+          }
         }
       }
     });
@@ -1109,9 +1127,10 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
         // หา entry เพื่อตรวจสอบการจัดรูปแบบ
         const entry = schedule.find(e => e.nurseId === staffId && e.date === dateStr && e.shiftType === 'morning');
         const textColor = entry?.formatting?.textColor || morningShift.color;
+        const displayText = morningShift.id === 'other' && entry?.customText ? entry.customText : morningShift.code;
         
-        // ตรวจสอบว่าเป็นเวรสีแดงหรือไม่ (ช, บ, ด ที่มีสีแดง)
-        if (textColor === '#ff0000' || textColor === '#d32f2f') {
+        // ตรวจสอบว่าเป็นเวรสีแดงหรือไม่ (ช, บ, ด ที่มีสีแดง) และไม่ใช่ตัวอักษร O
+        if ((textColor === '#ff0000' || textColor === '#d32f2f') && displayText !== 'O') {
           otShifts++;
         }
       }
@@ -1122,9 +1141,10 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
         // หา entry เพื่อตรวจสอบการจัดรูปแบบ
         const entry = schedule.find(e => e.nurseId === staffId && e.date === dateStr && e.shiftType === 'afternoon');
         const textColor = entry?.formatting?.textColor || afternoonShift.color;
+        const displayText = afternoonShift.id === 'other' && entry?.customText ? entry.customText : afternoonShift.code;
         
-        // ตรวจสอบว่าเป็นเวรสีแดงหรือไม่ (ช, บ, ด ที่มีสีแดง)
-        if (textColor === '#ff0000' || textColor === '#d32f2f') {
+        // ตรวจสอบว่าเป็นเวรสีแดงหรือไม่ (ช, บ, ด ที่มีสีแดง) และไม่ใช่ตัวอักษร O
+        if ((textColor === '#ff0000' || textColor === '#d32f2f') && displayText !== 'O') {
           otShifts++;
         }
       }
@@ -1137,9 +1157,10 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
           // หา entry เพื่อตรวจสอบการจัดรูปแบบ
           const entry = schedule.find(e => e.nurseId === staffId && e.date === dateStr);
           const textColor = entry?.formatting?.textColor || shift.color;
+          const displayText = shift.id === 'other' && entry?.customText ? entry.customText : shift.code;
           
-          // ตรวจสอบว่าเป็นเวรสีแดงหรือไม่ (ช, บ, ด ที่มีสีแดง)
-          if (textColor === '#ff0000' || textColor === '#d32f2f') {
+          // ตรวจสอบว่าเป็นเวรสีแดงหรือไม่ (ช, บ, ด ที่มีสีแดง) และไม่ใช่ตัวอักษร O
+          if ((textColor === '#ff0000' || textColor === '#d32f2f') && displayText !== 'O') {
             otShifts++;
           }
         }
