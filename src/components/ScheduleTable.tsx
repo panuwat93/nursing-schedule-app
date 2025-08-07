@@ -371,7 +371,6 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
     const staff = allStaff.find(s => s.id === selectedStaff);
     if (!staff) return null;
 
-    const staffSchedule = schedule.filter(s => s.nurseId === selectedStaff);
     const daysInMonth = new Date(year, month, 0).getDate();
 
     return (
@@ -388,8 +387,8 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
             const dayName = getDayName(date);
             const isWeekend = date.getDay() === 0 || date.getDay() === 6;
             
-            const daySchedule = staffSchedule.filter(s => s.date === dateStr);
-            const shift = daySchedule.length > 0 ? getShiftForNurse(selectedStaff, dateStr) : null;
+            // ดึงเวรจากตารางปกติ
+            const shift = getShiftForNurse(selectedStaff, dateStr);
             
             return (
               <Grid item xs={6} sm={4} md={3} lg={2} key={day}>
