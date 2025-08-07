@@ -1,0 +1,19 @@
+// กฎการรักษาความปลอดภัยสำหรับ Firestore
+// คัดลอกโค้ดนี้ไปวางใน Firebase Console > Firestore Database > Rules
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // อนุญาตให้อ่านและเขียนข้อมูลที่เผยแพร่แล้วได้ทุกคน (สำหรับการทดสอบ)
+    // ในการใช้งานจริงควรเพิ่ม authentication
+    match /published/{document} {
+      allow read, write: if true;
+    }
+    
+    // อนุญาตให้เขียนข้อมูลร่างได้ทุกคน (สำหรับการทดสอบ)
+    // ในการใช้งานจริงควรเพิ่ม authentication
+    match /drafts/{document} {
+      allow read, write: if true;
+    }
+  }
+}
