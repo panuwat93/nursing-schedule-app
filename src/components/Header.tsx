@@ -7,7 +7,7 @@ import {
   Box,
   Container,
 } from '@mui/material';
-import { LocalHospital, Schedule, Assignment, AdminPanelSettings } from '@mui/icons-material';
+import { LocalHospital, Schedule, Assignment, AdminPanelSettings, Favorite } from '@mui/icons-material';
 
 interface HeaderProps {
   currentPage: string;
@@ -38,9 +38,9 @@ const Header: React.FC<HeaderProps> = ({ currentPage, onPageChange, isAdmin = fa
     <AppBar position="static" sx={{ backgroundColor: '#2196f3' }}>
       <Container maxWidth="xl">
         <Toolbar>
-          <LocalHospital sx={{ mr: 2, fontSize: 32 }} />
+          <Favorite sx={{ mr: 2, fontSize: 32, color: '#ff4444' }} />
           <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontFamily: 'Kanit' }}>
-            ระบบจัดตารางเวรพยาบาล
+            SA-SICU1
           </Typography>
           
           <Box sx={{ display: 'flex', gap: 1 }}>
