@@ -19,15 +19,11 @@ import {
   IconButton,
   Tooltip,
   Divider,
-  ToggleButton,
-  ToggleButtonGroup,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
   Grid,
-  Card,
-  CardContent,
 } from '@mui/material';
 import {
   FormatBold,
@@ -78,9 +74,9 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
   const [selectedCells, setSelectedCells] = useState<{ nurseId: string; date: string; shiftType?: 'morning' | 'afternoon' | 'night' }[]>([]);
   const [showColorPicker, setShowColorPicker] = useState<'background' | 'text' | null>(null);
   
-  // โหมดการดู
-  const [viewMode, setViewMode] = useState<'summary' | 'individual'>('summary');
-  const [selectedStaff, setSelectedStaff] = useState<string>('');
+  // โหมดการดู - ลบออกเพราะไม่ใช้แล้ว
+  // const [viewMode, setViewMode] = useState<'summary' | 'individual'>('summary');
+  // const [selectedStaff, setSelectedStaff] = useState<string>('');
 
   // สีให้เลือก
   const colorOptions = [
@@ -308,166 +304,7 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
     };
   };
 
-  const renderViewModeSelector = () => {
-    return (
-      <Box sx={{ mb: 2, p: 2, backgroundColor: '#f8f9fa', borderRadius: 1 }}>
-        <Typography variant="h6" sx={{ fontFamily: 'Kanit', mb: 2 }}>
-          โหมดการดู
-        </Typography>
-        <Grid container spacing={2} alignItems="center">
-          <Grid item>
-            <ToggleButtonGroup
-              value={viewMode}
-              exclusive
-              onChange={(e, newMode) => {
-                if (newMode !== null) {
-                  setViewMode(newMode);
-                  if (newMode === 'individual' && currentStaffId) {
-                    setSelectedStaff(currentStaffId);
-                  } else if (newMode === 'summary') {
-                    setSelectedStaff('');
-                  }
-                }
-              }}
-              sx={{ fontFamily: 'Kanit' }}
-            >
-              <ToggleButton value="summary">
-                ตารางรวม
-              </ToggleButton>
-              <ToggleButton value="individual">
-                รายบุคคล
-              </ToggleButton>
-            </ToggleButtonGroup>
-          </Grid>
-        </Grid>
-      </Box>
-    );
-  };
 
-  const renderIndividualCalendar = () => {
-    if (!currentStaffId) {
-      return (
-        <Box sx={{ textAlign: 'center', py: 4 }}>
-          <Typography variant="h6" sx={{ fontFamily: 'Kanit', color: '#666' }}>
-            กรุณาเข้าสู่ระบบเพื่อดูตารางเวรส่วนตัว
-          </Typography>
-        </Box>
-      );
-    }
-
-    const staff = allStaff.find(s => s.id === selectedStaff);
-    if (!staff) return null;
-
-    const daysInMonth = new Date(year, month, 0).getDate();
-
-    return (
-      <Box>
-        <Typography variant="h5" sx={{ fontFamily: 'Kanit', mb: 2, textAlign: 'center' }}>
-          ตารางเวรของ {staff.name} - {format(new Date(year, month - 1), 'MMMM yyyy', { locale: th })}
-        </Typography>
-        
-        <Grid container spacing={1}>
-          {Array.from({ length: daysInMonth }, (_, i) => {
-            const day = i + 1;
-            const dateStr = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-            const date = new Date(year, month - 1, day);
-            const dayName = getDayName(date);
-            const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-            
-            // ตรวจสอบวันหยุดชดเชย
-            const publicHoliday = isPublicHoliday(date);
-            const isHoliday = isWeekend || publicHoliday.isHoliday;
-            
-            // ดึงเวรเช้าและเวรบ่ายจากตารางปกติ
-            const morningShift = getShiftForNurse(currentStaffId, dateStr, 'morning');
-            const afternoonShift = getShiftForNurse(currentStaffId, dateStr, 'afternoon');
-            
-            // สำหรับผู้ช่วยพาร์ทไทม์ (ไม่มี shiftType)
-            const staff = allStaff.find(s => s.id === currentStaffId);
-            const partTimeShift = staff?.isPartTime ? getShiftForNurse(currentStaffId, dateStr) : null;
-            
-            return (
-              <Grid item xs={6} sm={4} md={3} lg={2} key={day}>
-                <Card 
-                  sx={{ 
-                    height: 120,
-                    backgroundColor: isHoliday ? '#ffebee' : '#ffffff',
-                    border: '1px solid #e0e0e0',
-                    '&:hover': { backgroundColor: isHoliday ? '#ffcdd2' : '#f5f5f5' }
-                  }}
-                >
-                  <CardContent sx={{ p: 1, textAlign: 'center' }}>
-                    <Typography variant="h6" sx={{ fontFamily: 'Kanit', fontSize: '1.1rem' }}>
-                      {day}
-                    </Typography>
-                    <Typography variant="caption" sx={{ fontFamily: 'Kanit', color: isHoliday ? '#d32f2f' : '#666' }}>
-                      {dayName}
-                    </Typography>
-                    
-                    {/* แสดงเวรเช้า */}
-                    {morningShift && (
-                      <Box sx={{ mt: 0.5 }}>
-                        <Chip
-                          label={morningShift.id === 'other' && schedule.find(e => e.nurseId === currentStaffId && e.date === dateStr && e.shiftType === 'morning')?.customText ? 
-                            schedule.find(e => e.nurseId === currentStaffId && e.date === dateStr && e.shiftType === 'morning')?.customText : 
-                            morningShift.code}
-                          size="small"
-                          sx={{ 
-                            fontFamily: 'Kanit',
-                            backgroundColor: schedule.find(e => e.nurseId === currentStaffId && e.date === dateStr && e.shiftType === 'morning')?.formatting?.backgroundColor || morningShift.backgroundColor || '#e3f2fd',
-                            color: schedule.find(e => e.nurseId === currentStaffId && e.date === dateStr && e.shiftType === 'morning')?.formatting?.textColor || morningShift.color || '#000',
-                            fontSize: '0.6rem',
-                            height: '16px'
-                          }}
-                        />
-                      </Box>
-                    )}
-                    
-                    {/* แสดงเวรบ่าย */}
-                    {afternoonShift && (
-                      <Box sx={{ mt: 0.5 }}>
-                        <Chip
-                          label={afternoonShift.id === 'other' && schedule.find(e => e.nurseId === currentStaffId && e.date === dateStr && e.shiftType === 'afternoon')?.customText ? 
-                            schedule.find(e => e.nurseId === currentStaffId && e.date === dateStr && e.shiftType === 'afternoon')?.customText : 
-                            afternoonShift.code}
-                          size="small"
-                          sx={{ 
-                            fontFamily: 'Kanit',
-                            backgroundColor: schedule.find(e => e.nurseId === currentStaffId && e.date === dateStr && e.shiftType === 'afternoon')?.formatting?.backgroundColor || afternoonShift.backgroundColor || '#e3f2fd',
-                            color: schedule.find(e => e.nurseId === currentStaffId && e.date === dateStr && e.shiftType === 'afternoon')?.formatting?.textColor || afternoonShift.color || '#000',
-                            fontSize: '0.6rem',
-                            height: '16px'
-                          }}
-                        />
-                      </Box>
-                    )}
-                    
-                    {/* สำหรับผู้ช่วยพาร์ทไทม์ */}
-                    {partTimeShift && (
-                      <Box sx={{ mt: 0.5 }}>
-                        <Chip
-                          label={partTimeShift.id === 'other' && schedule.find(e => e.nurseId === currentStaffId && e.date === dateStr)?.customText ? 
-                            schedule.find(e => e.nurseId === currentStaffId && e.date === dateStr)?.customText : 
-                            partTimeShift.code}
-                          size="small"
-                          sx={{ 
-                            fontFamily: 'Kanit',
-                            backgroundColor: schedule.find(e => e.nurseId === currentStaffId && e.date === dateStr)?.formatting?.backgroundColor || partTimeShift.backgroundColor || '#e3f2fd',
-                            color: schedule.find(e => e.nurseId === currentStaffId && e.date === dateStr)?.formatting?.textColor || partTimeShift.color || '#000',
-                            fontSize: '0.75rem'
-                          }}
-                        />
-                      </Box>
-                    )}
-                  </CardContent>
-                </Card>
-              </Grid>
-            );
-          })}
-        </Grid>
-      </Box>
-    );
-  };
 
   const renderFormattingToolbar = () => {
     if (isReadOnly) return null;
@@ -1415,15 +1252,10 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
 
   return (
     <Box sx={{ width: '100%', overflow: 'hidden' }}>
-      {renderViewModeSelector()}
-      {viewMode === 'individual' ? (
-        renderIndividualCalendar()
-      ) : (
-        <>
-          {renderFormattingToolbar()}
-          <Typography variant="h6" sx={{ mb: 2, fontFamily: 'Kanit' }}>
-            ตารางเวรประจำเดือน {format(new Date(year, month - 1), 'MMMM yyyy', { locale: th })}
-          </Typography>
+      {renderFormattingToolbar()}
+      <Typography variant="h6" sx={{ mb: 2, fontFamily: 'Kanit' }}>
+        ตารางเวรประจำเดือน {format(new Date(year, month - 1), 'MMMM yyyy', { locale: th })}
+      </Typography>
 
           <TableContainer 
             component={Paper} 
@@ -2032,8 +1864,6 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
           </TableBody>
         </Table>
       </TableContainer>
-        </>
-      )}
     </Box>
   );
 };

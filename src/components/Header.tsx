@@ -40,6 +40,15 @@ const Header: React.FC<HeaderProps> = ({
     },
   ];
 
+  // เพิ่มปุ่มปฏิทินส่วนตัวสำหรับเจ้าหน้าที่ที่ล็อกอินแล้ว
+  if (isStaffLoggedIn || isAdmin) {
+    menuItems.push({
+      key: 'personal-calendar',
+      label: 'ปฏิทินส่วนตัว',
+      icon: <Schedule />,
+    });
+  }
+
   // เพิ่มปุ่มสำหรับแอดมิน
   if (isAdmin) {
     menuItems.push(

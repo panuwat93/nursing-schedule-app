@@ -9,6 +9,7 @@ import WorkAssignmentTable from './components/WorkAssignmentTable';
 import AdminLogin from './components/AdminLogin';
 import StaffLogin from './components/StaffLogin';
 import StaffRegistration from './components/StaffRegistration';
+import PersonalCalendar from './components/PersonalCalendar';
 import { ScheduleEntry, WorkAssignment, CustomHoliday } from './types';
 // import { nurses, assistants } from './data/nurses';
 import {
@@ -320,6 +321,30 @@ const App: React.FC = () => {
               schedule={publishedSchedule}
               isReadOnly={true}
               currentStaffId={currentStaffId}
+            />
+          </Box>
+        );
+
+      case 'personal-calendar':
+        if (!isStaffLoggedIn && !isAdmin) {
+          return (
+            <StaffLogin
+              onLogin={handleStaffLogin}
+              onRegister={handleShowRegister}
+            />
+          );
+        }
+        
+        return (
+          <Box>
+            <PersonalCalendar
+              year={currentYear}
+              month={currentMonth}
+              schedule={publishedSchedule}
+              assignments={publishedAssignments}
+              currentStaffId={currentStaffId}
+              onYearChange={setCurrentYear}
+              onMonthChange={setCurrentMonth}
             />
           </Box>
         );
