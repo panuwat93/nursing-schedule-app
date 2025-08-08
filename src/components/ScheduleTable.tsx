@@ -54,6 +54,7 @@ interface ScheduleTableProps {
   onScheduleChange: (entries: ScheduleEntry[]) => void;
   isReadOnly?: boolean;
   customHolidays?: CustomHoliday[];
+  currentStaffId?: string;
 }
 
 interface CustomHoliday {
@@ -69,7 +70,8 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
   schedule,
   onScheduleChange,
   isReadOnly = false,
-  customHolidays = []
+  customHolidays = [],
+  currentStaffId = ''
 }) => {
   const [editingCell, setEditingCell] = useState<{ nurseId: string; date: string; shiftType?: 'morning' | 'afternoon' | 'night' } | null>(null);
   const [editValue, setEditValue] = useState<string>('');
@@ -320,7 +322,9 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
               onChange={(e, newMode) => {
                 if (newMode !== null) {
                   setViewMode(newMode);
-                  if (newMode === 'summary') {
+                  if (newMode === 'individual' && currentStaffId) {
+                    setSelectedStaff(currentStaffId);
+                  } else if (newMode === 'summary') {
                     setSelectedStaff('');
                   }
                 }
@@ -335,37 +339,17 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
               </ToggleButton>
             </ToggleButtonGroup>
           </Grid>
-          
-          {viewMode === 'individual' && (
-            <Grid item>
-              <FormControl sx={{ minWidth: 200 }}>
-                <InputLabel sx={{ fontFamily: 'Kanit' }}>เลือกเจ้าหน้าที่</InputLabel>
-                <Select
-                  value={selectedStaff}
-                  onChange={(e) => setSelectedStaff(e.target.value)}
-                  label="เลือกเจ้าหน้าที่"
-                  sx={{ fontFamily: 'Kanit' }}
-                >
-                  {allStaff.map((staff) => (
-                    <MenuItem key={staff.id} value={staff.id} sx={{ fontFamily: 'Kanit' }}>
-                      {staff.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-          )}
         </Grid>
       </Box>
     );
   };
 
   const renderIndividualCalendar = () => {
-    if (!selectedStaff) {
+    if (!currentStaffId) {
       return (
         <Box sx={{ textAlign: 'center', py: 4 }}>
           <Typography variant="h6" sx={{ fontFamily: 'Kanit', color: '#666' }}>
-            กรุณาเลือกเจ้าหน้าที่เพื่อดูตารางเวร
+            กรุณาเข้าสู่ระบบเพื่อดูตารางเวรส่วนตัว
           </Typography>
         </Box>
       );
@@ -395,12 +379,12 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
             const isHoliday = isWeekend || publicHoliday.isHoliday;
             
             // ดึงเวรเช้าและเวรบ่ายจากตารางปกติ
-            const morningShift = getShiftForNurse(selectedStaff, dateStr, 'morning');
-            const afternoonShift = getShiftForNurse(selectedStaff, dateStr, 'afternoon');
+            const morningShift = getShiftForNurse(currentStaffId, dateStr, 'morning');
+            const afternoonShift = getShiftForNurse(currentStaffId, dateStr, 'afternoon');
             
             // สำหรับผู้ช่วยพาร์ทไทม์ (ไม่มี shiftType)
-            const staff = allStaff.find(s => s.id === selectedStaff);
-            const partTimeShift = staff?.isPartTime ? getShiftForNurse(selectedStaff, dateStr) : null;
+            const staff = allStaff.find(s => s.id === currentStaffId);
+            const partTimeShift = staff?.isPartTime ? getShiftForNurse(currentStaffId, dateStr) : null;
             
             return (
               <Grid item xs={6} sm={4} md={3} lg={2} key={day}>
@@ -424,14 +408,14 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
                     {morningShift && (
                       <Box sx={{ mt: 0.5 }}>
                         <Chip
-                          label={morningShift.id === 'other' && schedule.find(e => e.nurseId === selectedStaff && e.date === dateStr && e.shiftType === 'morning')?.customText ? 
-                            schedule.find(e => e.nurseId === selectedStaff && e.date === dateStr && e.shiftType === 'morning')?.customText : 
+                          label={morningShift.id === 'other' && schedule.find(e => e.nurseId === currentStaffId && e.date === dateStr && e.shiftType === 'morning')?.customText ? 
+                            schedule.find(e => e.nurseId === currentStaffId && e.date === dateStr && e.shiftType === 'morning')?.customText : 
                             morningShift.code}
                           size="small"
                           sx={{ 
                             fontFamily: 'Kanit',
-                            backgroundColor: schedule.find(e => e.nurseId === selectedStaff && e.date === dateStr && e.shiftType === 'morning')?.formatting?.backgroundColor || morningShift.backgroundColor || '#e3f2fd',
-                            color: schedule.find(e => e.nurseId === selectedStaff && e.date === dateStr && e.shiftType === 'morning')?.formatting?.textColor || morningShift.color || '#000',
+                            backgroundColor: schedule.find(e => e.nurseId === currentStaffId && e.date === dateStr && e.shiftType === 'morning')?.formatting?.backgroundColor || morningShift.backgroundColor || '#e3f2fd',
+                            color: schedule.find(e => e.nurseId === currentStaffId && e.date === dateStr && e.shiftType === 'morning')?.formatting?.textColor || morningShift.color || '#000',
                             fontSize: '0.6rem',
                             height: '16px'
                           }}
@@ -443,14 +427,14 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
                     {afternoonShift && (
                       <Box sx={{ mt: 0.5 }}>
                         <Chip
-                          label={afternoonShift.id === 'other' && schedule.find(e => e.nurseId === selectedStaff && e.date === dateStr && e.shiftType === 'afternoon')?.customText ? 
-                            schedule.find(e => e.nurseId === selectedStaff && e.date === dateStr && e.shiftType === 'afternoon')?.customText : 
+                          label={afternoonShift.id === 'other' && schedule.find(e => e.nurseId === currentStaffId && e.date === dateStr && e.shiftType === 'afternoon')?.customText ? 
+                            schedule.find(e => e.nurseId === currentStaffId && e.date === dateStr && e.shiftType === 'afternoon')?.customText : 
                             afternoonShift.code}
                           size="small"
                           sx={{ 
                             fontFamily: 'Kanit',
-                            backgroundColor: schedule.find(e => e.nurseId === selectedStaff && e.date === dateStr && e.shiftType === 'afternoon')?.formatting?.backgroundColor || afternoonShift.backgroundColor || '#e3f2fd',
-                            color: schedule.find(e => e.nurseId === selectedStaff && e.date === dateStr && e.shiftType === 'afternoon')?.formatting?.textColor || afternoonShift.color || '#000',
+                            backgroundColor: schedule.find(e => e.nurseId === currentStaffId && e.date === dateStr && e.shiftType === 'afternoon')?.formatting?.backgroundColor || afternoonShift.backgroundColor || '#e3f2fd',
+                            color: schedule.find(e => e.nurseId === currentStaffId && e.date === dateStr && e.shiftType === 'afternoon')?.formatting?.textColor || afternoonShift.color || '#000',
                             fontSize: '0.6rem',
                             height: '16px'
                           }}
@@ -462,14 +446,14 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
                     {partTimeShift && (
                       <Box sx={{ mt: 0.5 }}>
                         <Chip
-                          label={partTimeShift.id === 'other' && schedule.find(e => e.nurseId === selectedStaff && e.date === dateStr)?.customText ? 
-                            schedule.find(e => e.nurseId === selectedStaff && e.date === dateStr)?.customText : 
+                          label={partTimeShift.id === 'other' && schedule.find(e => e.nurseId === currentStaffId && e.date === dateStr)?.customText ? 
+                            schedule.find(e => e.nurseId === currentStaffId && e.date === dateStr)?.customText : 
                             partTimeShift.code}
                           size="small"
                           sx={{ 
                             fontFamily: 'Kanit',
-                            backgroundColor: schedule.find(e => e.nurseId === selectedStaff && e.date === dateStr)?.formatting?.backgroundColor || partTimeShift.backgroundColor || '#e3f2fd',
-                            color: schedule.find(e => e.nurseId === selectedStaff && e.date === dateStr)?.formatting?.textColor || partTimeShift.color || '#000',
+                            backgroundColor: schedule.find(e => e.nurseId === currentStaffId && e.date === dateStr)?.formatting?.backgroundColor || partTimeShift.backgroundColor || '#e3f2fd',
+                            color: schedule.find(e => e.nurseId === currentStaffId && e.date === dateStr)?.formatting?.textColor || partTimeShift.color || '#000',
                             fontSize: '0.75rem'
                           }}
                         />

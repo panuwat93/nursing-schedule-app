@@ -295,6 +295,7 @@ const App: React.FC = () => {
               onScheduleChange={() => {}}
               isReadOnly={true}
               customHolidays={publishedCustomHolidays}
+              currentStaffId={currentStaffId}
             />
           </Box>
         );
@@ -375,6 +376,7 @@ const App: React.FC = () => {
               onScheduleChange={setSchedule}
               isReadOnly={false}
               customHolidays={customHolidays}
+              currentStaffId={currentStaffId}
             />
           </Box>
         );
