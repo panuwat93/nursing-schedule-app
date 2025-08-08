@@ -58,6 +58,11 @@ const PersonalCalendar: React.FC<PersonalCalendarProps> = ({
     
     if (!entry) return null;
 
+    // ถ้ามี customText ให้ใช้ customText แทน
+    if (entry.customText) {
+      return { code: entry.customText };
+    }
+
     const shifts = currentStaff?.type === 'nurse' ? nurseShifts : assistantShifts;
     return shifts.find(s => s.id === entry.shiftId) || null;
   };
@@ -157,62 +162,62 @@ const PersonalCalendar: React.FC<PersonalCalendarProps> = ({
                   </Typography>
                   
                   <Box sx={{ mt: 0.5, display: 'flex', flexDirection: 'column', gap: 0.3 }}>
-                    {/* แสดงเวร */}
-                    {morningShift && (
-                      <Chip
-                        label={`เช้า: ${morningShift.code}`}
-                        size="small"
-                        sx={{ 
-                          fontFamily: 'Kanit',
-                          backgroundColor: '#e3f2fd',
-                          color: '#1976d2',
-                          fontSize: '0.6rem',
-                          height: '16px'
-                        }}
-                      />
-                    )}
-                    
-                    {afternoonShift && (
-                      <Chip
-                        label={`บ่าย: ${afternoonShift.code}`}
-                        size="small"
-                        sx={{ 
-                          fontFamily: 'Kanit',
-                          backgroundColor: '#fff3e0',
-                          color: '#e65100',
-                          fontSize: '0.6rem',
-                          height: '16px'
-                        }}
-                      />
-                    )}
-                    
-                    {nightShift && (
-                      <Chip
-                        label={`ดึก: ${nightShift.code}`}
-                        size="small"
-                        sx={{ 
-                          fontFamily: 'Kanit',
-                          backgroundColor: '#f3e5f5',
-                          color: '#7b1fa2',
-                          fontSize: '0.6rem',
-                          height: '16px'
-                        }}
-                      />
-                    )}
-                    
-                    {partTimeShift && (
-                      <Chip
-                        label={`พาร์ทไทม์: ${partTimeShift.code}`}
-                        size="small"
-                        sx={{ 
-                          fontFamily: 'Kanit',
-                          backgroundColor: '#e8f5e8',
-                          color: '#2e7d32',
-                          fontSize: '0.6rem',
-                          height: '16px'
-                        }}
-                      />
-                    )}
+                                         {/* แสดงเวร */}
+                     {morningShift && (
+                       <Chip
+                         label={morningShift.code}
+                         size="small"
+                         sx={{ 
+                           fontFamily: 'Kanit',
+                           backgroundColor: '#e3f2fd',
+                           color: '#1976d2',
+                           fontSize: '0.6rem',
+                           height: '16px'
+                         }}
+                       />
+                     )}
+                     
+                     {afternoonShift && (
+                       <Chip
+                         label={afternoonShift.code}
+                         size="small"
+                         sx={{ 
+                           fontFamily: 'Kanit',
+                           backgroundColor: '#fff3e0',
+                           color: '#e65100',
+                           fontSize: '0.6rem',
+                           height: '16px'
+                         }}
+                       />
+                     )}
+                     
+                     {nightShift && (
+                       <Chip
+                         label={nightShift.code}
+                         size="small"
+                         sx={{ 
+                           fontFamily: 'Kanit',
+                           backgroundColor: '#f3e5f5',
+                           color: '#7b1fa2',
+                           fontSize: '0.6rem',
+                           height: '16px'
+                         }}
+                       />
+                     )}
+                     
+                     {partTimeShift && (
+                       <Chip
+                         label={partTimeShift.code}
+                         size="small"
+                         sx={{ 
+                           fontFamily: 'Kanit',
+                           backgroundColor: '#e8f5e8',
+                           color: '#2e7d32',
+                           fontSize: '0.6rem',
+                           height: '16px'
+                         }}
+                       />
+                     )}
                     
                     {/* แสดงงานที่ได้รับมอบหมาย */}
                     {dayAssignments.length > 0 && (
