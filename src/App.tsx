@@ -58,6 +58,10 @@ const App: React.FC = () => {
   const [customHolidays, setCustomHolidays] = useState<CustomHoliday[]>([]);
   const [publishedCustomHolidays, setPublishedCustomHolidays] = useState<CustomHoliday[]>([]);
   
+  // Original schedule data (before exchange)
+  const [originalSchedule, setOriginalSchedule] = useState<ScheduleEntry[]>([]);
+  const [originalCustomHolidays, setOriginalCustomHolidays] = useState<CustomHoliday[]>([]);
+  
 
   
   // Loading states
@@ -191,6 +195,21 @@ const App: React.FC = () => {
     }
   };
 
+  const handleSaveOriginalSchedule = async () => {
+    setIsLoading(true);
+    try {
+      // บันทึกตารางเวรปัจจุบันเป็นตารางเวรก่อนแลก
+      setOriginalSchedule([...schedule]);
+      setOriginalCustomHolidays([...customHolidays]);
+      showNotification('บันทึกตารางเวรก่อนแลกสำเร็จ', 'success');
+    } catch (error) {
+      console.error('Error saving original schedule:', error);
+      showNotification('เกิดข้อผิดพลาดในการบันทึกตารางเวรก่อนแลก', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const showNotification = (message: string, type: 'success' | 'error') => {
     setNotification({ message, type });
   };
@@ -277,6 +296,19 @@ const App: React.FC = () => {
         
         return (
           <Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <h2 style={{ fontFamily: 'Kanit' }}>ตารางเวรประจำเดือน</h2>
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <Button
+                  variant="contained"
+                  onClick={handlePublishSchedule}
+                  sx={{ fontFamily: 'Kanit' }}
+                >
+                  บันทึก
+                </Button>
+              </Box>
+            </Box>
+            
             <MonthSelector
               year={currentYear}
               month={currentMonth}
@@ -286,16 +318,17 @@ const App: React.FC = () => {
             <MonthlySummary 
               year={currentYear} 
               month={currentMonth} 
-              isAdmin={false}
-              customHolidays={publishedCustomHolidays}
+              isAdmin={true}
+              customHolidays={customHolidays}
+              onCustomHolidaysChange={setCustomHolidays}
             />
             <ScheduleTable
               year={currentYear}
               month={currentMonth}
-              schedule={publishedSchedule}
-              onScheduleChange={() => {}}
-              isReadOnly={true}
-              customHolidays={publishedCustomHolidays}
+              schedule={schedule}
+              onScheduleChange={setSchedule}
+              isReadOnly={false}
+              customHolidays={customHolidays}
               currentStaffId={currentStaffId}
             />
           </Box>
@@ -311,15 +344,33 @@ const App: React.FC = () => {
           );
         }
         
+        // ตรวจสอบว่าเป็นภาณุวัฒน์หรือไม่
+        const isPanuwat = currentStaffId === 'a1'; // a1 คือ ID ของภาณุวัฒน์
+        
         return (
           <Box>
+            {isPanuwat && (
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                <h2 style={{ fontFamily: 'Kanit' }}>ตารางมอบหมายงานประจำวัน</h2>
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                  <Button
+                    variant="contained"
+                    onClick={handlePublishAssignments}
+                    sx={{ fontFamily: 'Kanit' }}
+                  >
+                    บันทึก
+                  </Button>
+                </Box>
+              </Box>
+            )}
+            
             <WorkAssignmentTable
               year={currentYear}
               month={currentMonth}
-              assignments={publishedAssignments}
-              onAssignmentChange={() => {}}
-              schedule={publishedSchedule}
-              isReadOnly={true}
+              assignments={isPanuwat ? assignments : publishedAssignments}
+              onAssignmentChange={isPanuwat ? setAssignments : () => {}}
+              schedule={isPanuwat ? schedule : publishedSchedule}
+              isReadOnly={!isPanuwat}
               currentStaffId={currentStaffId}
             />
           </Box>
@@ -340,8 +391,8 @@ const App: React.FC = () => {
             <PersonalCalendar
               year={currentYear}
               month={currentMonth}
-              schedule={publishedSchedule}
-              assignments={publishedAssignments}
+              schedule={schedule}
+              assignments={assignments}
               currentStaffId={currentStaffId}
               onYearChange={setCurrentYear}
               onMonthChange={setCurrentMonth}
@@ -371,6 +422,14 @@ const App: React.FC = () => {
                   sx={{ fontFamily: 'Kanit' }}
                 >
                   ส่งออก
+                </Button>
+                <Button
+                  variant="outlined"
+                  color="warning"
+                  onClick={handleSaveOriginalSchedule}
+                  sx={{ fontFamily: 'Kanit' }}
+                >
+                  บันทึกตารางเวรก่อนแลก
                 </Button>
                 <Button
                   variant="outlined"
@@ -445,6 +504,47 @@ const App: React.FC = () => {
               onAssignmentChange={setAssignments}
               schedule={schedule}
               isReadOnly={false}
+              currentStaffId={currentStaffId}
+            />
+          </Box>
+        );
+
+      case 'original-schedule':
+        return (
+          <Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <h2 style={{ fontFamily: 'Kanit' }}>ตารางเวรก่อนแลก</h2>
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <Button
+                  variant="outlined"
+                  onClick={() => setCurrentPage('admin-schedule')}
+                  sx={{ fontFamily: 'Kanit' }}
+                >
+                  กลับ
+                </Button>
+              </Box>
+            </Box>
+            
+            <MonthSelector
+              year={currentYear}
+              month={currentMonth}
+              onYearChange={setCurrentYear}
+              onMonthChange={setCurrentMonth}
+            />
+            <MonthlySummary 
+              year={currentYear} 
+              month={currentMonth} 
+              isAdmin={true}
+              customHolidays={customHolidays}
+              onCustomHolidaysChange={setCustomHolidays}
+            />
+            <ScheduleTable
+              year={currentYear}
+              month={currentMonth}
+              schedule={originalSchedule}
+              onScheduleChange={() => {}}
+              isReadOnly={true}
+              customHolidays={originalCustomHolidays}
               currentStaffId={currentStaffId}
             />
           </Box>

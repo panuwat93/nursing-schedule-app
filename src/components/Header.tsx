@@ -27,26 +27,27 @@ const Header: React.FC<HeaderProps> = ({
   currentStaffId = '',
   onLogout
 }) => {
-  const menuItems = [
-    {
-      key: 'schedule',
-      label: 'ตารางเวรประจำเดือน',
-      icon: <Schedule />,
-    },
-    {
-      key: 'assignments',
-      label: 'ตารางมอบหมายงานประจำวัน',
-      icon: <Assignment />,
-    },
-  ];
+  const menuItems = [];
 
-  // เพิ่มปุ่มปฏิทินส่วนตัวสำหรับเจ้าหน้าที่ที่ล็อกอินแล้ว
-  if (isStaffLoggedIn || isAdmin) {
-    menuItems.push({
-      key: 'personal-calendar',
-      label: 'ปฏิทินส่วนตัว',
-      icon: <Schedule />,
-    });
+  // เพิ่มปุ่มสำหรับเจ้าหน้าที่ทั่วไป (ไม่ใช่แอดมิน)
+  if (isStaffLoggedIn && !isAdmin) {
+    menuItems.push(
+      {
+        key: 'schedule',
+        label: 'ตารางเวรประจำเดือน',
+        icon: <Schedule />,
+      },
+      {
+        key: 'assignments',
+        label: 'ตารางมอบหมายงานประจำวัน',
+        icon: <Assignment />,
+      },
+      {
+        key: 'personal-calendar',
+        label: 'ปฏิทินส่วนตัว',
+        icon: <Schedule />,
+      }
+    );
   }
 
   // เพิ่มปุ่มสำหรับแอดมิน
@@ -61,6 +62,11 @@ const Header: React.FC<HeaderProps> = ({
         key: 'admin-assignments',
         label: 'จัดตารางมอบหมายงาน',
         icon: <Assignment />,
+      },
+      {
+        key: 'original-schedule',
+        label: 'ตารางเวรก่อนแลก',
+        icon: <Schedule />,
       }
     );
   }

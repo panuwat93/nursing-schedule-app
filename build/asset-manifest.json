@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/nursing-schedule-app/static/css/main.1bf5085b.css",
-    "main.js": "/nursing-schedule-app/static/js/main.41f4da54.js",
+    "main.js": "/nursing-schedule-app/static/js/main.d7242275.js",
     "index.html": "/nursing-schedule-app/index.html",
     "main.1bf5085b.css.map": "/nursing-schedule-app/static/css/main.1bf5085b.css.map",
-    "main.41f4da54.js.map": "/nursing-schedule-app/static/js/main.41f4da54.js.map"
+    "main.d7242275.js.map": "/nursing-schedule-app/static/js/main.d7242275.js.map"
   },
   "entrypoints": [
     "static/css/main.1bf5085b.css",
-    "static/js/main.41f4da54.js"
+    "static/js/main.d7242275.js"
   ]
 }
