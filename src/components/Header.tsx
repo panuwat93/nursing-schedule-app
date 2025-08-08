@@ -40,6 +40,22 @@ const Header: React.FC<HeaderProps> = ({
     },
   ];
 
+  // เพิ่มปุ่มสำหรับแอดมิน
+  if (isAdmin) {
+    menuItems.push(
+      {
+        key: 'admin-schedule',
+        label: 'จัดตารางเวร',
+        icon: <Schedule />,
+      },
+      {
+        key: 'admin-assignments',
+        label: 'จัดตารางมอบหมายงาน',
+        icon: <Assignment />,
+      }
+    );
+  }
+
   // ฟังก์ชันดึงชื่อเจ้าหน้าที่จาก ID
   const getStaffName = (staffId: string) => {
     const allStaff = [...nurses, ...assistants];
@@ -47,8 +63,8 @@ const Header: React.FC<HeaderProps> = ({
     return staff ? staff.name : staffId;
   };
 
-  // แสดงปุ่ม ADMIN เฉพาะเมื่อไม่ได้ล็อกอินเป็นแอดมิน
-  if (!isAdmin) {
+  // แสดงปุ่ม ADMIN เฉพาะเมื่อไม่ได้ล็อกอินเป็นแอดมินและเจ้าหน้าที่ทั่วไป
+  if (!isAdmin && !isStaffLoggedIn) {
     menuItems.push({
       key: 'admin',
       label: 'เข้าสู่ระบบ ADMIN',

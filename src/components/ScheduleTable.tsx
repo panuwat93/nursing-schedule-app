@@ -274,8 +274,11 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
   };
 
   const resetTable = () => {
-    // เคลียร์ตารางทั้งหมดให้เป็นตารางเปล่า
-    onScheduleChange([]);
+    // ยืนยันก่อนรีเซท
+    if (window.confirm('คุณแน่ใจหรือไม่ที่จะรีเซทตารางทั้งหมด? การดำเนินการนี้ไม่สามารถยกเลิกได้')) {
+      // เคลียร์ตารางทั้งหมดให้เป็นตารางเปล่า
+      onScheduleChange([]);
+    }
   };
 
   const getSelectedCellFormatting = () => {

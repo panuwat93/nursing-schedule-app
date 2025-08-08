@@ -76,7 +76,7 @@ const App: React.FC = () => {
     if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
       setIsAdmin(true);
       setAdminError('');
-      setCurrentPage('admin');
+      setCurrentPage('admin-schedule');
       showNotification('เข้าสู่ระบบสำเร็จ', 'success');
     } else {
       setAdminError('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
@@ -125,6 +125,10 @@ const App: React.FC = () => {
 
   const handleBackToLogin = () => {
     setCurrentPage('login');
+  };
+
+  const handleAdminLoginPage = () => {
+    setCurrentPage('admin-login');
   };
 
   const handlePublishSchedule = async () => {
@@ -239,6 +243,7 @@ const App: React.FC = () => {
           <StaffLogin
             onLogin={handleStaffLogin}
             onRegister={handleShowRegister}
+            onAdminLogin={handleAdminLoginPage}
           />
         );
 
@@ -247,6 +252,15 @@ const App: React.FC = () => {
           <StaffRegistration
             onRegister={handleStaffRegister}
             onBackToLogin={handleBackToLogin}
+          />
+        );
+
+      case 'admin-login':
+        return (
+          <AdminLogin
+            onLogin={handleAdminLogin}
+            onBackToLogin={handleBackToLogin}
+            error={adminError}
           />
         );
 
@@ -308,47 +322,7 @@ const App: React.FC = () => {
           </Box>
         );
 
-      case 'admin':
-        if (!isAdmin) {
-          return (
-            <AdminLogin
-              onLogin={handleAdminLogin}
-              error={adminError}
-            />
-          );
-        }
 
-        return (
-          <Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-              <h2 style={{ fontFamily: 'Kanit' }}>เมนูแอดมิน</h2>
-              <Button
-                variant="outlined"
-                onClick={handleLogout}
-                sx={{ fontFamily: 'Kanit' }}
-              >
-                ออกจากระบบ
-              </Button>
-            </Box>
-
-            <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
-              <Button
-                variant="contained"
-                onClick={() => setCurrentPage('admin-schedule')}
-                sx={{ fontFamily: 'Kanit' }}
-              >
-                จัดตารางเวร
-              </Button>
-              <Button
-                variant="contained"
-                onClick={() => setCurrentPage('admin-assignments')}
-                sx={{ fontFamily: 'Kanit' }}
-              >
-                จัดตารางมอบหมายงาน
-              </Button>
-            </Box>
-          </Box>
-        );
 
       case 'admin-schedule':
         return (
@@ -373,7 +347,7 @@ const App: React.FC = () => {
                 </Button>
                 <Button
                   variant="outlined"
-                  onClick={() => setCurrentPage('admin')}
+                  onClick={() => setCurrentPage('schedule')}
                   sx={{ fontFamily: 'Kanit' }}
                 >
                   กลับ
@@ -428,7 +402,7 @@ const App: React.FC = () => {
                 </Button>
                 <Button
                   variant="outlined"
-                  onClick={() => setCurrentPage('admin')}
+                  onClick={() => setCurrentPage('schedule')}
                   sx={{ fontFamily: 'Kanit' }}
                 >
                   กลับ
@@ -479,7 +453,7 @@ const App: React.FC = () => {
     <ThemeProvider theme={theme}>
       <Box sx={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
         {/* แสดง Header เฉพาะเมื่อไม่ได้อยู่ในหน้าล็อกอินหรือสมัครสมาชิก */}
-        {(currentPage !== 'login' && currentPage !== 'register') && (
+        {(currentPage !== 'login' && currentPage !== 'register' && currentPage !== 'admin-login') && (
           <Header
             currentPage={currentPage}
             onPageChange={setCurrentPage}
@@ -491,7 +465,7 @@ const App: React.FC = () => {
         )}
         
         {/* แสดง Container เฉพาะเมื่อไม่ได้อยู่ในหน้าล็อกอินหรือสมัครสมาชิก */}
-        {(currentPage !== 'login' && currentPage !== 'register') ? (
+        {(currentPage !== 'login' && currentPage !== 'register' && currentPage !== 'admin-login') ? (
           <Container maxWidth="xl" sx={{ py: 3 }}>
             {renderPage()}
           </Container>

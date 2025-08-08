@@ -8,14 +8,15 @@ import {
   Alert,
   Container,
 } from '@mui/material';
-import { AdminPanelSettings } from '@mui/icons-material';
+import { AdminPanelSettings, ArrowBack } from '@mui/icons-material';
 
 interface AdminLoginProps {
   onLogin: (username: string, password: string) => void;
+  onBackToLogin?: () => void;
   error?: string;
 }
 
-const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin, error }) => {
+const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin, onBackToLogin, error }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
@@ -80,6 +81,21 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin, error }) => {
             >
               เข้าสู่ระบบ
             </Button>
+
+            {onBackToLogin && (
+              <Button
+                fullWidth
+                variant="outlined"
+                startIcon={<ArrowBack />}
+                onClick={onBackToLogin}
+                sx={{ 
+                  fontFamily: 'Kanit',
+                  py: 1.5
+                }}
+              >
+                กลับไปหน้าเข้าสู่ระบบ
+              </Button>
+            )}
           </form>
         </Paper>
       </Box>

@@ -14,16 +14,19 @@ import {
   Grid,
   Divider,
 } from '@mui/material';
+import { AdminPanelSettings } from '@mui/icons-material';
 import { nurses, assistants } from '../data/nurses';
 
 interface StaffLoginProps {
   onLogin: (staffId: string, password: string) => Promise<boolean>;
   onRegister: () => void;
+  onAdminLogin?: () => void;
 }
 
 const StaffLogin: React.FC<StaffLoginProps> = ({
   onLogin,
   onRegister,
+  onAdminLogin,
 }) => {
   const [selectedStaffId, setSelectedStaffId] = useState('');
   const [password, setPassword] = useState('');
@@ -190,6 +193,29 @@ const StaffLogin: React.FC<StaffLoginProps> = ({
             สมัครสมาชิก
           </Button>
         </Box>
+
+        <Divider sx={{ my: 3 }} />
+
+        {onAdminLogin && (
+          <Box sx={{ textAlign: 'center' }}>
+            <Button
+              variant="outlined"
+              startIcon={<AdminPanelSettings />}
+              onClick={onAdminLogin}
+              sx={{
+                fontFamily: 'Kanit',
+                color: '#666',
+                borderColor: '#666',
+                '&:hover': {
+                  borderColor: '#333',
+                  color: '#333',
+                },
+              }}
+            >
+              เข้าสู่ระบบแอดมิน
+            </Button>
+          </Box>
+        )}
       </Paper>
     </Box>
   );
