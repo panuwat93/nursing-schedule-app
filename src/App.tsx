@@ -319,6 +319,7 @@ const App: React.FC = () => {
               onAssignmentChange={() => {}}
               schedule={publishedSchedule}
               isReadOnly={true}
+              currentStaffId={currentStaffId}
             />
           </Box>
         );
@@ -419,6 +420,7 @@ const App: React.FC = () => {
               onAssignmentChange={setAssignments}
               schedule={schedule}
               isReadOnly={false}
+              currentStaffId={currentStaffId}
             />
           </Box>
         );

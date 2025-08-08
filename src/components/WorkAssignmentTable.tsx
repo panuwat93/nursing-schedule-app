@@ -24,6 +24,10 @@ import {
   Checkbox,
   Chip,
   ListItemText,
+  ToggleButtonGroup,
+  ToggleButton,
+  Card,
+  CardContent,
 } from '@mui/material';
 import { format } from 'date-fns';
 import { th } from 'date-fns/locale';
@@ -76,6 +80,7 @@ interface WorkAssignmentTableProps {
   onAssignmentChange: (assignments: WorkAssignment[]) => void;
   schedule: ScheduleEntry[]; // เพิ่มตารางเวรเพื่อกรองเจ้าหน้าที่
   isReadOnly?: boolean;
+  currentStaffId?: string;
 }
 
 const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
@@ -85,6 +90,7 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
   onAssignmentChange,
   schedule,
   isReadOnly = false,
+  currentStaffId = '',
 }) => {
   const [selectedAssignment, setSelectedAssignment] = useState<WorkAssignment | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -95,6 +101,9 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
   const [selectedYear, setSelectedYear] = useState(year.toString());
   const [selectedMonth, setSelectedMonth] = useState(month.toString());
   const [selectedDay, setSelectedDay] = useState('1');
+  
+  // View mode state
+  const [viewMode, setViewMode] = useState<'daily' | 'individual'>('daily');
 
   // Get current date for default selection
   const currentDate = new Date();
@@ -126,6 +135,15 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
   // Get days in selected month
   const getDaysInMonth = (year: number, month: number) => {
     return new Date(year, month, 0).getDate();
+  };
+
+  const getAssignmentsForStaff = (staffId: string, date: string) => {
+    return assignments.filter(a => a.nurseId === staffId && a.date === date);
+  };
+
+  const getDayName = (date: Date) => {
+    const days = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
+    return days[date.getDay()];
   };
 
   const handleAddAssignment = () => {
@@ -420,7 +438,32 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
         </Grid>
       </Paper>
 
-      <TableContainer component={Paper}>
+      {/* โหมดการดู */}
+      <Paper sx={{ p: 2, mb: 2, backgroundColor: '#f8f9fa' }}>
+        <Typography variant="h6" sx={{ fontFamily: 'Kanit', mb: 2 }}>
+          โหมดการดู
+        </Typography>
+        <ToggleButtonGroup
+          value={viewMode}
+          exclusive
+          onChange={(e, newMode) => {
+            if (newMode !== null) {
+              setViewMode(newMode);
+            }
+          }}
+          sx={{ fontFamily: 'Kanit' }}
+        >
+          <ToggleButton value="daily">
+            รายวัน
+          </ToggleButton>
+          <ToggleButton value="individual">
+            รายบุคคล
+          </ToggleButton>
+        </ToggleButtonGroup>
+      </Paper>
+
+      {viewMode === 'daily' ? (
+        <TableContainer component={Paper}>
         <Table>
           <TableHead>
             <TableRow>
@@ -516,6 +559,156 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
           </TableBody>
         </Table>
       </TableContainer>
+      ) : (
+        // โหมดรายบุคคล - แสดงปฏิทิน
+        <Box>
+          <Typography variant="h5" sx={{ fontFamily: 'Kanit', mb: 2, textAlign: 'center' }}>
+            ตารางมอบหมายงานของ {getNurseName(currentStaffId)} - {format(new Date(Number(selectedYear), Number(selectedMonth) - 1), 'MMMM yyyy', { locale: th })}
+          </Typography>
+          
+          <Grid container spacing={1}>
+            {Array.from({ length: getDaysInMonth(Number(selectedYear), Number(selectedMonth)) }, (_, i) => {
+              const day = i + 1;
+              const dateStr = `${selectedYear}-${selectedMonth.padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+              const date = new Date(Number(selectedYear), Number(selectedMonth) - 1, day);
+              const dayName = getDayName(date);
+              const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+              
+              // ดึงงานที่ได้รับมอบหมายสำหรับเจ้าหน้าที่นี้ในวันนี้
+              const dayAssignments = getAssignmentsForStaff(currentStaffId, dateStr);
+              
+              return (
+                <Grid item xs={6} sm={4} md={3} lg={2} key={day}>
+                  <Card 
+                    sx={{ 
+                      height: 160,
+                      backgroundColor: isWeekend ? '#ffebee' : '#ffffff',
+                      border: '1px solid #e0e0e0',
+                      '&:hover': { backgroundColor: isWeekend ? '#ffcdd2' : '#f5f5f5' }
+                    }}
+                  >
+                    <CardContent sx={{ p: 1, textAlign: 'center' }}>
+                      <Typography variant="h6" sx={{ fontFamily: 'Kanit', fontSize: '1.1rem' }}>
+                        {day}
+                      </Typography>
+                      <Typography variant="caption" sx={{ fontFamily: 'Kanit', color: isWeekend ? '#d32f2f' : '#666' }}>
+                        {dayName}
+                      </Typography>
+                      
+                      {/* แสดงงานที่ได้รับมอบหมาย */}
+                      {dayAssignments.length > 0 ? (
+                        <Box sx={{ mt: 0.5, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                          {dayAssignments.map((assignment, index) => (
+                            <Box key={assignment.id} sx={{ display: 'flex', flexDirection: 'column', gap: 0.2 }}>
+                              {/* เวร */}
+                              <Chip
+                                label={SHIFTS.find(s => s.id === assignment.shift)?.name || ''}
+                                size="small"
+                                sx={{ 
+                                  fontFamily: 'Kanit',
+                                  backgroundColor: '#e3f2fd',
+                                  color: '#1976d2',
+                                  fontSize: '0.6rem',
+                                  height: '16px',
+                                  mb: 0.2
+                                }}
+                              />
+                              
+                              {/* เตียง */}
+                              {assignment.bedArea && (
+                                <Chip
+                                  label={assignment.bedArea}
+                                  size="small"
+                                  sx={{ 
+                                    fontFamily: 'Kanit',
+                                    backgroundColor: '#fff3e0',
+                                    color: '#e65100',
+                                    fontSize: '0.5rem',
+                                    height: '14px'
+                                  }}
+                                />
+                              )}
+                              
+                              {/* หน้าที่ */}
+                              {assignment.duties && assignment.duties.length > 0 && (
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.2 }}>
+                                  {assignment.duties.map((duty, dutyIndex) => (
+                                    <Chip
+                                      key={dutyIndex}
+                                      label={duty}
+                                      size="small"
+                                      sx={{ 
+                                        fontFamily: 'Kanit',
+                                        backgroundColor: '#f3e5f5',
+                                        color: '#7b1fa2',
+                                        fontSize: '0.5rem',
+                                        height: '14px'
+                                      }}
+                                    />
+                                  ))}
+                                </Box>
+                              )}
+                              
+                              {/* ERT */}
+                              {assignment.ert && (
+                                <Chip
+                                  label={`ERT: ${assignment.ert}`}
+                                  size="small"
+                                  sx={{ 
+                                    fontFamily: 'Kanit',
+                                    backgroundColor: '#e8f5e8',
+                                    color: '#2e7d32',
+                                    fontSize: '0.5rem',
+                                    height: '14px'
+                                  }}
+                                />
+                              )}
+                              
+                              {/* ยาเสพติด */}
+                              {assignment.drugSupervision && (
+                                <Chip
+                                  label="ยาเสพติด"
+                                  size="small"
+                                  sx={{ 
+                                    fontFamily: 'Kanit',
+                                    backgroundColor: '#ffebee',
+                                    color: '#c62828',
+                                    fontSize: '0.5rem',
+                                    height: '14px'
+                                  }}
+                                />
+                              )}
+                              
+                              {/* ทีม */}
+                              {assignment.team && (
+                                <Chip
+                                  label={assignment.team}
+                                  size="small"
+                                  sx={{ 
+                                    fontFamily: 'Kanit',
+                                    backgroundColor: '#e0f2f1',
+                                    color: '#00695c',
+                                    fontSize: '0.5rem',
+                                    height: '14px'
+                                  }}
+                                />
+                              )}
+                            </Box>
+                          ))}
+                        </Box>
+                      ) : (
+                        <Typography variant="caption" sx={{ fontFamily: 'Kanit', color: '#999', mt: 0.5 }}>
+                          ไม่มีงาน
+                        </Typography>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Grid>
+              );
+            })}
+          </Grid>
+        </Box>
+      )}
 
       {/* Dialog for adding/editing assignment */}
       <Dialog open={isDialogOpen} onClose={handleCloseDialog} maxWidth="md" fullWidth>
