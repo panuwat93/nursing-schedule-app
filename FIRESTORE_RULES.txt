@@ -15,5 +15,11 @@ service cloud.firestore {
     match /drafts/{document} {
       allow read, write: if true;
     }
+    
+    // อนุญาตให้อ่านและเขียนข้อมูลบัญชีเจ้าหน้าที่ได้ทุกคน (สำหรับการทดสอบ)
+    // ในการใช้งานจริงควรเพิ่ม authentication
+    match /staffAccounts/{document} {
+      allow read, write: if true;
+    }
   }
 }

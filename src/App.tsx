@@ -7,6 +7,8 @@ import MonthlySummary from './components/MonthlySummary';
 import ScheduleTable from './components/ScheduleTable';
 import WorkAssignmentTable from './components/WorkAssignmentTable';
 import AdminLogin from './components/AdminLogin';
+import StaffLogin from './components/StaffLogin';
+import StaffRegistration from './components/StaffRegistration';
 import { ScheduleEntry, WorkAssignment, CustomHoliday } from './types';
 // import { nurses, assistants } from './data/nurses';
 import {
@@ -17,6 +19,7 @@ import {
   publishScheduleAndAssignments,
   loadPublishedData
 } from './services/dataService';
+import { registerStaff, loginStaff } from './services/authService';
 
 
 const theme = createTheme({
@@ -34,8 +37,10 @@ const theme = createTheme({
 });
 
 const App: React.FC = () => {
-  const [currentPage, setCurrentPage] = useState('schedule');
+  const [currentPage, setCurrentPage] = useState('login');
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isStaffLoggedIn, setIsStaffLoggedIn] = useState(false);
+  const [currentStaffId, setCurrentStaffId] = useState('');
   const [adminError, setAdminError] = useState('');
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
@@ -80,8 +85,46 @@ const App: React.FC = () => {
 
   const handleLogout = () => {
     setIsAdmin(false);
-    setCurrentPage('schedule');
+    setIsStaffLoggedIn(false);
+    setCurrentStaffId('');
+    setCurrentPage('login');
     showNotification('ออกจากระบบสำเร็จ', 'success');
+  };
+
+  const handleStaffLogin = async (staffId: string, password: string) => {
+    const success = await loginStaff(staffId, password);
+    if (success) {
+      setIsStaffLoggedIn(true);
+      setCurrentStaffId(staffId);
+      setCurrentPage('schedule');
+      showNotification('เข้าสู่ระบบสำเร็จ', 'success');
+      return true;
+    }
+    return false;
+  };
+
+  const handleStaffRegister = async (staffId: string, password: string, confirmPassword: string) => {
+    if (password !== confirmPassword) {
+      return false;
+    }
+    
+    const success = await registerStaff(staffId, password);
+    if (success) {
+      showNotification('สมัครสมาชิกสำเร็จ กรุณาเข้าสู่ระบบ', 'success');
+      setCurrentPage('login');
+      return true;
+    } else {
+      showNotification('มีบัญชีนี้อยู่แล้ว', 'error');
+      return false;
+    }
+  };
+
+  const handleShowRegister = () => {
+    setCurrentPage('register');
+  };
+
+  const handleBackToLogin = () => {
+    setCurrentPage('login');
   };
 
   const handlePublishSchedule = async () => {
@@ -191,7 +234,32 @@ const App: React.FC = () => {
 
   const renderPage = () => {
     switch (currentPage) {
+      case 'login':
+        return (
+          <StaffLogin
+            onLogin={handleStaffLogin}
+            onRegister={handleShowRegister}
+          />
+        );
+
+      case 'register':
+        return (
+          <StaffRegistration
+            onRegister={handleStaffRegister}
+            onBackToLogin={handleBackToLogin}
+          />
+        );
+
       case 'schedule':
+        if (!isStaffLoggedIn && !isAdmin) {
+          return (
+            <StaffLogin
+              onLogin={handleStaffLogin}
+              onRegister={handleShowRegister}
+            />
+          );
+        }
+        
         return (
           <Box>
             <MonthSelector
@@ -218,6 +286,15 @@ const App: React.FC = () => {
         );
 
       case 'assignments':
+        if (!isStaffLoggedIn && !isAdmin) {
+          return (
+            <StaffLogin
+              onLogin={handleStaffLogin}
+              onRegister={handleShowRegister}
+            />
+          );
+        }
+        
         return (
           <Box>
             <WorkAssignmentTable
@@ -401,15 +478,26 @@ const App: React.FC = () => {
   return (
     <ThemeProvider theme={theme}>
       <Box sx={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
-        <Header
-          currentPage={currentPage}
-          onPageChange={setCurrentPage}
-          isAdmin={isAdmin}
-        />
+        {/* แสดง Header เฉพาะเมื่อไม่ได้อยู่ในหน้าล็อกอินหรือสมัครสมาชิก */}
+        {(currentPage !== 'login' && currentPage !== 'register') && (
+          <Header
+            currentPage={currentPage}
+            onPageChange={setCurrentPage}
+            isAdmin={isAdmin}
+            isStaffLoggedIn={isStaffLoggedIn}
+            currentStaffId={currentStaffId}
+            onLogout={handleLogout}
+          />
+        )}
         
-        <Container maxWidth="xl" sx={{ py: 3 }}>
-          {renderPage()}
-        </Container>
+        {/* แสดง Container เฉพาะเมื่อไม่ได้อยู่ในหน้าล็อกอินหรือสมัครสมาชิก */}
+        {(currentPage !== 'login' && currentPage !== 'register') ? (
+          <Container maxWidth="xl" sx={{ py: 3 }}>
+            {renderPage()}
+          </Container>
+        ) : (
+          renderPage()
+        )}
 
         <Snackbar
           open={!!notification}
