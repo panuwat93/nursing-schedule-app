@@ -28,7 +28,14 @@ import {
   ToggleButton,
   Card,
   CardContent,
+  useTheme,
+  useMediaQuery,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  IconButton,
 } from '@mui/material';
+import { ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { th } from 'date-fns/locale';
 import { WorkAssignment, ScheduleEntry } from '../types';
@@ -96,6 +103,10 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingAssignment, setEditingAssignment] = useState<Partial<WorkAssignment>>({});
   const [shiftAssignments, setShiftAssignments] = useState<{ [staffId: string]: Partial<WorkAssignment> }>({});
+  
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isLandscape = useMediaQuery('(orientation: landscape)');
   
   // Date selection state
   const [selectedYear, setSelectedYear] = useState(year.toString());
@@ -340,9 +351,309 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
   const selectedDateAssignments = getAssignmentsForSelectedDate();
   const daysInMonth = getDaysInMonth(Number(selectedYear), Number(selectedMonth));
 
+  // สำหรับ Mobile: แสดงแบบ Card แทน Table
+  const renderMobileAssignmentCards = () => {
+    if (selectedDateAssignments.length === 0) {
+      return (
+        <Card sx={{ mt: 2 }}>
+          <CardContent sx={{ textAlign: 'center', py: 4 }}>
+            <Typography variant="body1" sx={{ fontFamily: 'Kanit', color: '#666' }}>
+              ไม่มีงานที่มอบหมายในวันที่ {formatDate(getSelectedDateString())}
+            </Typography>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    // จัดกลุ่มตามเวร
+    const assignmentsByShift = selectedDateAssignments.reduce((acc, assignment) => {
+      const shiftName = SHIFTS.find(s => s.id === assignment.shift)?.name || assignment.shift || 'ไม่ระบุเวร';
+      if (!acc[shiftName]) {
+        acc[shiftName] = [];
+      }
+      acc[shiftName].push(assignment);
+      return acc;
+    }, {} as { [key: string]: WorkAssignment[] });
+
+    // สำหรับ Mobile Landscape: แสดงแบบ Grid 2 คอลัมน์
+    if (isMobile && isLandscape) {
+      return (
+        <Box sx={{ mt: 2 }}>
+          {Object.entries(assignmentsByShift).map(([shiftName, shiftAssignments]) => (
+            <Accordion key={shiftName} defaultExpanded sx={{ mb: 1 }}>
+              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <Typography variant="h6" sx={{ fontFamily: 'Kanit', fontWeight: 'bold' }}>
+                  เวร{shiftName} ({shiftAssignments.length} คน)
+                </Typography>
+              </AccordionSummary>
+              <AccordionDetails sx={{ p: 1 }}>
+                <Grid container spacing={1}>
+                  {shiftAssignments.map((assignment) => {
+                    const staff = allStaff.find(s => s.id === assignment.nurseId);
+                    
+                    return (
+                      <Grid item xs={6} key={assignment.id}>
+                        <Card sx={{ border: '1px solid #e0e0e0', height: '100%' }}>
+                          <CardContent sx={{ p: 1.5 }}>
+                            {/* ชื่อเจ้าหน้าที่ - แบบกะทัดรัด */}
+                            <Typography variant="subtitle2" sx={{ fontFamily: 'Kanit', fontWeight: 'bold', mb: 1, fontSize: '0.85rem' }}>
+                              {getNurseName(assignment.nurseId)}
+                              <Chip 
+                                label={staff?.type === 'nurse' ? 'พยาบาล' : 'ผู้ช่วย'} 
+                                size="small" 
+                                sx={{ ml: 1, fontSize: '0.6rem', height: '16px' }}
+                              />
+                            </Typography>
+
+                            {/* รายละเอียดงาน - แบบกะทัดรัด */}
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                              {/* เตียงที่ดูแล */}
+                              {assignment.bedArea && (
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                  <Typography variant="caption" sx={{ fontFamily: 'Kanit', fontWeight: 'bold', fontSize: '0.7rem' }}>
+                                    เตียง:
+                                  </Typography>
+                                  <Chip 
+                                    label={assignment.bedArea} 
+                                    size="small" 
+                                    color="primary" 
+                                    variant="outlined"
+                                    sx={{ fontSize: '0.6rem', height: '18px' }}
+                                  />
+                                </Box>
+                              )}
+
+                              {/* หน้าที่ */}
+                              {assignment.duties && assignment.duties.length > 0 && (
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.3 }}>
+                                  {assignment.duties.map((duty, index) => (
+                                    <Chip 
+                                      key={index}
+                                      label={duty} 
+                                      size="small" 
+                                      color="secondary" 
+                                      variant="outlined"
+                                      sx={{ fontSize: '0.5rem', height: '16px' }}
+                                    />
+                                  ))}
+                                </Box>
+                              )}
+
+                              {/* ERT & ยาเสพติด & ทีม - ในบรรทัดเดียว */}
+                              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.3 }}>
+                                {assignment.ert && (
+                                  <Chip 
+                                    label={`ERT: ${assignment.ert}`} 
+                                    size="small" 
+                                    color="success" 
+                                    variant="outlined"
+                                    sx={{ fontSize: '0.5rem', height: '16px' }}
+                                  />
+                                )}
+                                {assignment.drugSupervision && (
+                                  <Chip 
+                                    label="ยาเสพติด" 
+                                    size="small" 
+                                    color="warning"
+                                    sx={{ fontSize: '0.5rem', height: '16px' }}
+                                  />
+                                )}
+                                {assignment.team && (
+                                  <Chip 
+                                    label={assignment.team} 
+                                    size="small" 
+                                    color="info" 
+                                    variant="outlined"
+                                    sx={{ fontSize: '0.5rem', height: '16px' }}
+                                  />
+                                )}
+                              </Box>
+                            </Box>
+
+                            {/* ปุ่มจัดการ - แบบกะทัดรัด */}
+                            {!isReadOnly && (
+                              <Box sx={{ display: 'flex', gap: 0.5, mt: 1, justifyContent: 'flex-end' }}>
+                                <Button
+                                  size="small"
+                                  variant="outlined"
+                                  onClick={() => handleEditAssignment(assignment)}
+                                  sx={{ fontFamily: 'Kanit', fontSize: '0.7rem', minWidth: '50px', py: 0.3 }}
+                                >
+                                  แก้ไข
+                                </Button>
+                                <Button
+                                  size="small"
+                                  variant="outlined"
+                                  color="error"
+                                  onClick={() => handleDeleteAssignment(assignment.id)}
+                                  sx={{ fontFamily: 'Kanit', fontSize: '0.7rem', minWidth: '40px', py: 0.3 }}
+                                >
+                                  ลบ
+                                </Button>
+                              </Box>
+                            )}
+                          </CardContent>
+                        </Card>
+                      </Grid>
+                    );
+                  })}
+                </Grid>
+              </AccordionDetails>
+            </Accordion>
+          ))}
+        </Box>
+      );
+    }
+
+    // สำหรับ Mobile Portrait: แสดงแบบเดิม
+    return (
+      <Box sx={{ mt: 2 }}>
+        {Object.entries(assignmentsByShift).map(([shiftName, shiftAssignments]) => (
+          <Accordion key={shiftName} defaultExpanded sx={{ mb: 1 }}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography variant="h6" sx={{ fontFamily: 'Kanit', fontWeight: 'bold' }}>
+                เวร{shiftName} ({shiftAssignments.length} คน)
+              </Typography>
+            </AccordionSummary>
+            <AccordionDetails sx={{ p: 1 }}>
+              {shiftAssignments.map((assignment) => {
+                const staff = allStaff.find(s => s.id === assignment.nurseId);
+                
+                return (
+                  <Card key={assignment.id} sx={{ mb: 2, border: '1px solid #e0e0e0' }}>
+                    <CardContent sx={{ p: 2 }}>
+                      {/* ชื่อเจ้าหน้าที่ */}
+                      <Typography variant="subtitle1" sx={{ fontFamily: 'Kanit', fontWeight: 'bold', mb: 1 }}>
+                        {getNurseName(assignment.nurseId)} 
+                        <Chip 
+                          label={staff?.type === 'nurse' ? 'พยาบาล' : 'ผู้ช่วย'} 
+                          size="small" 
+                          sx={{ ml: 1, fontSize: '0.7rem' }}
+                        />
+                      </Typography>
+
+                      {/* รายละเอียดงาน */}
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                        {/* เตียงที่ดูแล */}
+                        {assignment.bedArea && (
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Typography variant="body2" sx={{ fontFamily: 'Kanit', fontWeight: 'bold', minWidth: '60px' }}>
+                              เตียง:
+                            </Typography>
+                            <Chip 
+                              label={assignment.bedArea} 
+                              size="small" 
+                              color="primary" 
+                              variant="outlined"
+                            />
+                          </Box>
+                        )}
+
+                        {/* หน้าที่ */}
+                        {assignment.duties && assignment.duties.length > 0 && (
+                          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+                            <Typography variant="body2" sx={{ fontFamily: 'Kanit', fontWeight: 'bold', minWidth: '60px', mt: 0.5 }}>
+                              หน้าที่:
+                            </Typography>
+                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                              {assignment.duties.map((duty, index) => (
+                                <Chip 
+                                  key={index}
+                                  label={duty} 
+                                  size="small" 
+                                  color="secondary" 
+                                  variant="outlined"
+                                />
+                              ))}
+                            </Box>
+                          </Box>
+                        )}
+
+                        {/* ERT */}
+                        {assignment.ert && (
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Typography variant="body2" sx={{ fontFamily: 'Kanit', fontWeight: 'bold', minWidth: '60px' }}>
+                              ERT:
+                            </Typography>
+                            <Chip 
+                              label={assignment.ert} 
+                              size="small" 
+                              color="success" 
+                              variant="outlined"
+                            />
+                          </Box>
+                        )}
+
+                        {/* ดูแลยาเสพติด */}
+                        {assignment.drugSupervision && (
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Chip 
+                              label="ดูแลยาเสพติด" 
+                              size="small" 
+                              color="warning"
+                            />
+                          </Box>
+                        )}
+
+                        {/* ทีม */}
+                        {assignment.team && (
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Typography variant="body2" sx={{ fontFamily: 'Kanit', fontWeight: 'bold', minWidth: '60px' }}>
+                              ทีม:
+                            </Typography>
+                            <Chip 
+                              label={assignment.team} 
+                              size="small" 
+                              color="info" 
+                              variant="outlined"
+                            />
+                          </Box>
+                        )}
+                      </Box>
+
+                      {/* ปุ่มจัดการ */}
+                      {!isReadOnly && (
+                        <Box sx={{ display: 'flex', gap: 1, mt: 2, justifyContent: 'flex-end' }}>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            onClick={() => handleEditAssignment(assignment)}
+                            sx={{ fontFamily: 'Kanit' }}
+                          >
+                            แก้ไข
+                          </Button>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            color="error"
+                            onClick={() => handleDeleteAssignment(assignment.id)}
+                            sx={{ fontFamily: 'Kanit' }}
+                          >
+                            ลบ
+                          </Button>
+                        </Box>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </AccordionDetails>
+          </Accordion>
+        ))}
+      </Box>
+    );
+  };
+
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: isMobile ? 'flex-start' : 'center', 
+        mb: 2,
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? 1 : 0
+      }}>
         <Typography variant="h6" sx={{ fontFamily: 'Kanit' }}>
           ตารางมอบหมายงานประจำวัน
         </Typography>
@@ -350,7 +661,11 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
           <Button
             variant="contained"
             onClick={handleAddAssignment}
-            sx={{ fontFamily: 'Kanit' }}
+            sx={{ 
+              fontFamily: 'Kanit',
+              width: isMobile ? '100%' : 'auto',
+              fontSize: isMobile ? '0.9rem' : '1rem'
+            }}
           >
             เพิ่มมอบหมายงาน
           </Button>
@@ -463,102 +778,108 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
       </Paper>
 
       {viewMode === 'daily' ? (
-        <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell sx={{ fontFamily: 'Kanit', fontWeight: 'bold' }}>เวร</TableCell>
-              <TableCell sx={{ fontFamily: 'Kanit', fontWeight: 'bold' }}>เจ้าหน้าที่</TableCell>
-              <TableCell sx={{ fontFamily: 'Kanit', fontWeight: 'bold' }}>รายละเอียด</TableCell>
-              {!isReadOnly && (
-                <TableCell sx={{ fontFamily: 'Kanit', fontWeight: 'bold' }}>การจัดการ</TableCell>
-              )}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {selectedDateAssignments.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={isReadOnly ? 3 : 4} align="center" sx={{ fontFamily: 'Kanit' }}>
-                  ไม่มีงานที่มอบหมายในวันที่ {formatDate(getSelectedDateString())}
-                </TableCell>
-              </TableRow>
-            ) : (
-              selectedDateAssignments.map((assignment) => {
-                const staff = allStaff.find(s => s.id === assignment.nurseId);
-                const shiftName = SHIFTS.find(s => s.id === assignment.shift)?.name || '';
-                
-                return (
-                  <TableRow key={assignment.id}>
-                    <TableCell sx={{ fontFamily: 'Kanit' }}>
-                      {shiftName}
+        isMobile ? (
+          // Mobile View: Card Layout
+          renderMobileAssignmentCards()
+        ) : (
+          // Desktop View: Table Layout
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ fontFamily: 'Kanit', fontWeight: 'bold' }}>เวร</TableCell>
+                  <TableCell sx={{ fontFamily: 'Kanit', fontWeight: 'bold' }}>เจ้าหน้าที่</TableCell>
+                  <TableCell sx={{ fontFamily: 'Kanit', fontWeight: 'bold' }}>รายละเอียด</TableCell>
+                  {!isReadOnly && (
+                    <TableCell sx={{ fontFamily: 'Kanit', fontWeight: 'bold' }}>การจัดการ</TableCell>
+                  )}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {selectedDateAssignments.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={isReadOnly ? 3 : 4} align="center" sx={{ fontFamily: 'Kanit' }}>
+                      ไม่มีงานที่มอบหมายในวันที่ {formatDate(getSelectedDateString())}
                     </TableCell>
-                    <TableCell sx={{ fontFamily: 'Kanit' }}>
-                      {getNurseName(assignment.nurseId)} ({staff?.type === 'nurse' ? 'พยาบาล' : 'ผู้ช่วย'})
-                    </TableCell>
-                    <TableCell sx={{ fontFamily: 'Kanit' }}>
-                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                        {/* เตียงที่ดูแล */}
-                        {assignment.bedArea && (
-                          <Typography variant="caption" sx={{ fontFamily: 'Kanit' }}>
-                            เตียง: {assignment.bedArea}
-                          </Typography>
-                        )}
-                        {/* หน้าที่ */}
-                        {assignment.duties && assignment.duties.length > 0 && (
-                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                            {assignment.duties.map((duty) => (
-                              <Chip key={duty} label={duty} size="small" variant="outlined" />
-                            ))}
-                          </Box>
-                        )}
-                        {/* ดูแลยาเสพติด */}
-                        {assignment.drugSupervision && (
-                          <Chip label="ดูแลยาเสพติด" size="small" color="warning" />
-                        )}
-                        {/* ERT */}
-                        {assignment.ert && (
-                          <Typography variant="caption" sx={{ fontFamily: 'Kanit' }}>
-                            ERT: {assignment.ert}
-                          </Typography>
-                        )}
-                        {/* ทีม */}
-                        {assignment.team && (
-                          <Typography variant="caption" sx={{ fontFamily: 'Kanit' }}>
-                            {assignment.team}
-                          </Typography>
-                        )}
-                      </Box>
-                    </TableCell>
-                    {!isReadOnly && (
-                      <TableCell>
-                        <Box sx={{ display: 'flex', gap: 1 }}>
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            onClick={() => handleEditAssignment(assignment)}
-                            sx={{ fontFamily: 'Kanit' }}
-                          >
-                            แก้ไข
-                          </Button>
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            color="error"
-                            onClick={() => handleDeleteAssignment(assignment.id)}
-                            sx={{ fontFamily: 'Kanit' }}
-                          >
-                            ลบ
-                          </Button>
-                        </Box>
-                      </TableCell>
-                    )}
                   </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+                ) : (
+                  selectedDateAssignments.map((assignment) => {
+                    const staff = allStaff.find(s => s.id === assignment.nurseId);
+                    const shiftName = SHIFTS.find(s => s.id === assignment.shift)?.name || '';
+                    
+                    return (
+                      <TableRow key={assignment.id}>
+                        <TableCell sx={{ fontFamily: 'Kanit' }}>
+                          {shiftName}
+                        </TableCell>
+                        <TableCell sx={{ fontFamily: 'Kanit' }}>
+                          {getNurseName(assignment.nurseId)} ({staff?.type === 'nurse' ? 'พยาบาล' : 'ผู้ช่วย'})
+                        </TableCell>
+                        <TableCell sx={{ fontFamily: 'Kanit' }}>
+                          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                            {/* เตียงที่ดูแล */}
+                            {assignment.bedArea && (
+                              <Typography variant="caption" sx={{ fontFamily: 'Kanit' }}>
+                                เตียง: {assignment.bedArea}
+                              </Typography>
+                            )}
+                            {/* หน้าที่ */}
+                            {assignment.duties && assignment.duties.length > 0 && (
+                              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                {assignment.duties.map((duty) => (
+                                  <Chip key={duty} label={duty} size="small" variant="outlined" />
+                                ))}
+                              </Box>
+                            )}
+                            {/* ดูแลยาเสพติด */}
+                            {assignment.drugSupervision && (
+                              <Chip label="ดูแลยาเสพติด" size="small" color="warning" />
+                            )}
+                            {/* ERT */}
+                            {assignment.ert && (
+                              <Typography variant="caption" sx={{ fontFamily: 'Kanit' }}>
+                                ERT: {assignment.ert}
+                              </Typography>
+                            )}
+                            {/* ทีม */}
+                            {assignment.team && (
+                              <Typography variant="caption" sx={{ fontFamily: 'Kanit' }}>
+                                {assignment.team}
+                              </Typography>
+                            )}
+                          </Box>
+                        </TableCell>
+                        {!isReadOnly && (
+                          <TableCell>
+                            <Box sx={{ display: 'flex', gap: 1 }}>
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                onClick={() => handleEditAssignment(assignment)}
+                                sx={{ fontFamily: 'Kanit' }}
+                              >
+                                แก้ไข
+                              </Button>
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                color="error"
+                                onClick={() => handleDeleteAssignment(assignment.id)}
+                                sx={{ fontFamily: 'Kanit' }}
+                              >
+                                ลบ
+                              </Button>
+                            </Box>
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )
       ) : (
         // โหมดรายบุคคล - แสดงปฏิทิน
         <Box>
@@ -578,20 +899,33 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
               const dayAssignments = getAssignmentsForStaff(currentStaffId, dateStr);
               
               return (
-                <Grid item xs={6} sm={4} md={3} lg={2} key={day}>
+                <Grid item 
+                  xs={isMobile && isLandscape ? 3 : 6} 
+                  sm={4} 
+                  md={3} 
+                  lg={isMobile ? 3 : 2} 
+                  key={day}
+                >
                   <Card 
                     sx={{ 
-                      height: 160,
+                      height: isMobile ? (isLandscape ? 120 : 140) : 160,
                       backgroundColor: isWeekend ? '#ffebee' : '#ffffff',
                       border: '1px solid #e0e0e0',
                       '&:hover': { backgroundColor: isWeekend ? '#ffcdd2' : '#f5f5f5' }
                     }}
                   >
                     <CardContent sx={{ p: 1, textAlign: 'center' }}>
-                      <Typography variant="h6" sx={{ fontFamily: 'Kanit', fontSize: '1.1rem' }}>
+                      <Typography variant="h6" sx={{ 
+                        fontFamily: 'Kanit', 
+                        fontSize: isMobile && isLandscape ? '1rem' : '1.1rem'
+                      }}>
                         {day}
                       </Typography>
-                      <Typography variant="caption" sx={{ fontFamily: 'Kanit', color: isWeekend ? '#d32f2f' : '#666' }}>
+                      <Typography variant="caption" sx={{ 
+                        fontFamily: 'Kanit', 
+                        color: isWeekend ? '#d32f2f' : '#666',
+                        fontSize: isMobile && isLandscape ? '0.65rem' : '0.75rem'
+                      }}>
                         {dayName}
                       </Typography>
                       
@@ -608,8 +942,8 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
                                   fontFamily: 'Kanit',
                                   backgroundColor: '#e3f2fd',
                                   color: '#1976d2',
-                                  fontSize: '0.6rem',
-                                  height: '16px',
+                                  fontSize: isMobile && isLandscape ? '0.5rem' : '0.6rem',
+                                  height: isMobile && isLandscape ? '14px' : '16px',
                                   mb: 0.2
                                 }}
                               />
@@ -623,8 +957,8 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
                                     fontFamily: 'Kanit',
                                     backgroundColor: '#fff3e0',
                                     color: '#e65100',
-                                    fontSize: '0.5rem',
-                                    height: '14px'
+                                    fontSize: isMobile && isLandscape ? '0.45rem' : '0.5rem',
+                                    height: isMobile && isLandscape ? '12px' : '14px'
                                   }}
                                 />
                               )}
@@ -641,8 +975,8 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
                                         fontFamily: 'Kanit',
                                         backgroundColor: '#f3e5f5',
                                         color: '#7b1fa2',
-                                        fontSize: '0.5rem',
-                                        height: '14px'
+                                        fontSize: isMobile && isLandscape ? '0.4rem' : '0.5rem',
+                                        height: isMobile && isLandscape ? '12px' : '14px'
                                       }}
                                     />
                                   ))}

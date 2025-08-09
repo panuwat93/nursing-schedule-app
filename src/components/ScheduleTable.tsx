@@ -149,20 +149,15 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
       return;
     }
     
-    // ถ้าไม่ได้กด Ctrl/Cmd ให้เลือกช่องเดียว
-    setSelectedCells([{ nurseId, date, shiftType }]);
-  };
-
-  const handleCellDoubleClick = (nurseId: string, date: string, shiftType?: 'morning' | 'afternoon' | 'night') => {
-    if (isReadOnly) return;
-    
+    // คลิกเดียวเพื่อแก้ไข (ทั้งมือถือและเดสก์ท็อป)
     const currentEntry = schedule.find(e => e.nurseId === nurseId && e.date === date && e.shiftType === shiftType);
     const currentShift = getShiftForNurse(nurseId, date, shiftType);
     
-    // เริ่มการแก้ไข
     setEditingCell({ nurseId, date, shiftType });
     setEditValue(currentEntry?.customText || currentShift?.code || '');
   };
+
+
 
   const handleSaveEdit = () => {
     if (!editingCell) return;
@@ -573,7 +568,7 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
         </Tooltip>
         
         <Typography variant="caption" sx={{ fontFamily: 'Kanit', color: 'text.secondary', ml: 'auto' }}>
-          {selectedCells.length > 0 ? `เลือก ${selectedCells.length} ช่อง` : 'คลิกช่องเพื่อเลือก'}
+          {selectedCells.length > 0 ? `เลือก ${selectedCells.length} ช่อง` : 'คลิกช่องเพื่อแก้ไข หรือ Ctrl+คลิก เพื่อเลือกหลายช่อง'}
         </Typography>
       </Toolbar>
     );
@@ -617,7 +612,7 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
           fontWeight: entry?.formatting?.bold ? 'bold' : 'bold',
           fontStyle: entry?.formatting?.italic ? 'italic' : 'normal',
           textDecoration: entry?.formatting?.underline ? 'underline' : 'none',
-          fontSize: entry?.formatting?.fontSize ? `${entry.formatting.fontSize}px` : (isMobile ? '0.6rem' : '0.75rem'),
+                                fontSize: entry?.formatting?.fontSize ? `${entry.formatting.fontSize}px` : (isMobile ? '0.8rem' : '0.75rem'),
           width: '100%',
           height: '100%',
           borderRadius: '0',
@@ -667,7 +662,12 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
     }
 
     return (
-      <Box onDoubleClick={() => handleCellDoubleClick(nurseId, date, shiftType)}>
+      <Box 
+        sx={{
+          // ปิด zoom บนมือถือ
+          touchAction: isMobile ? 'manipulation' : 'auto',
+        }}
+      >
         {renderShiftCell(shift, nurseId, date, shiftType)}
       </Box>
     );
@@ -1103,23 +1103,23 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
 
   // Calculate responsive column widths based on screen size and number of days
   const getColumnWidth = () => {
-    const daysInMonth = days.length;
     if (isMobile) {
-      // For mobile, use very compact columns
-      return `${Math.max(25, Math.min(30, (100 - 120) / daysInMonth))}px`;
+      // For mobile, use fixed wider columns for better touch interaction
+      return '45px';
     }
     if (isTablet) {
       // For tablet, use medium compact columns
-      return `${Math.max(30, Math.min(40, (100 - 120) / daysInMonth))}px`;
+      return '50px';
     }
     // For desktop, use comfortable columns
+    const daysInMonth = days.length;
     return `${Math.max(35, Math.min(50, (100 - 120) / daysInMonth))}px`;
   };
 
   const getNameColumnWidth = () => {
-    if (isMobile) return '120px';
-    if (isTablet) return '120px';
-    return '120px';
+    if (isMobile) return '140px';
+    if (isTablet) return '140px';
+    return '140px';
   };
 
   const renderGroupHeader = (title: string, backgroundColor: string) => (
@@ -1151,11 +1151,12 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
         width: getNameColumnWidth(),
         position: 'sticky',
         left: 0,
-        zIndex: 1,
+        zIndex: 2,
         fontSize: isMobile ? '0.6rem' : '0.7rem',
         padding: isMobile ? '4px 2px' : '6px 4px',
         borderRight: '2px solid #e0e0e0',
         color: 'white',
+        boxShadow: isMobile ? '2px 0 4px rgba(0,0,0,0.1)' : 'none',
       }}>
         {label}
       </TableCell>
@@ -1253,22 +1254,97 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
   return (
     <Box sx={{ width: '100%', overflow: 'hidden' }}>
       {renderFormattingToolbar()}
-      <Typography variant="h6" sx={{ mb: 2, fontFamily: 'Kanit' }}>
-        ตารางเวรประจำเดือน {format(new Date(year, month - 1), 'MMMM yyyy', { locale: th })}
-      </Typography>
+      
+      {/* Header with mobile navigation */}
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, flexWrap: 'wrap', gap: 1 }}>
+        <Typography variant="h6" sx={{ fontFamily: 'Kanit', flex: 1 }}>
+          ตารางเวรประจำเดือน {format(new Date(year, month - 1), 'MMMM yyyy', { locale: th })}
+        </Typography>
+        
+        {isMobile && (
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={() => {
+                const container = document.querySelector('[data-testid="table-container"]') as HTMLElement;
+                if (container) {
+                  container.scrollLeft = 0;
+                }
+              }}
+              sx={{ 
+                fontFamily: 'Kanit',
+                fontSize: '0.7rem',
+                minWidth: 'auto',
+                px: 1
+              }}
+            >
+              วันแรก
+            </Button>
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={() => {
+                const container = document.querySelector('[data-testid="table-container"]') as HTMLElement;
+                if (container) {
+                  const today = new Date();
+                  if (today.getFullYear() === year && today.getMonth() + 1 === month) {
+                    const todayColumn = today.getDate() - 1;
+                    const columnWidth = 45;
+                    container.scrollLeft = (todayColumn * columnWidth) - (container.clientWidth / 2);
+                  }
+                }
+              }}
+              sx={{ 
+                fontFamily: 'Kanit',
+                fontSize: '0.7rem',
+                minWidth: 'auto',
+                px: 1
+              }}
+            >
+              วันนี้
+            </Button>
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={() => {
+                const container = document.querySelector('[data-testid="table-container"]') as HTMLElement;
+                if (container) {
+                  container.scrollLeft = container.scrollWidth - container.clientWidth;
+                }
+              }}
+              sx={{ 
+                fontFamily: 'Kanit',
+                fontSize: '0.7rem',
+                minWidth: 'auto',
+                px: 1
+              }}
+            >
+              วันสุดท้าย
+            </Button>
+          </Box>
+        )}
+      </Box>
 
           <TableContainer 
-            component={Paper} 
+            component={Paper}
+            data-testid="table-container"
             sx={{ 
               maxHeight: 600,
               width: '100%',
-          overflowX: 'hidden',
-          overflowY: 'auto',
-          '& .MuiTable-root': {
-            width: '100%',
-            tableLayout: 'fixed',
-          }
-        }}
+              overflowX: 'auto',
+              overflowY: 'auto',
+              '& .MuiTable-root': {
+                minWidth: isMobile ? `${140 + (days.length * 45) + 165}px` : '100%',
+                tableLayout: 'fixed',
+              },
+              // เพิ่ม smooth scrolling สำหรับมือถือ
+              ...(isMobile && {
+                WebkitOverflowScrolling: 'touch',
+                scrollBehavior: 'smooth',
+                touchAction: 'manipulation', // ป้องกันการ zoom
+              })
+            }}
         onKeyDown={handleKeyDown}
         tabIndex={0}
       >
@@ -1282,9 +1358,11 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
                 width: getNameColumnWidth(),
                 position: 'sticky',
                 left: 0,
-                zIndex: 2,
+                zIndex: 3,
                 fontSize: isMobile ? '0.7rem' : '0.8rem',
                 padding: isMobile ? '4px 2px' : '8px 4px',
+                borderRight: '2px solid #e0e0e0',
+                boxShadow: isMobile ? '2px 0 4px rgba(0,0,0,0.1)' : 'none',
               }}>
                 ชื่อเจ้าหน้าที่
               </TableCell>
@@ -1397,7 +1475,8 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
                       width: getNameColumnWidth(),
                       position: 'sticky',
                       left: 0,
-                      zIndex: 1,
+                      zIndex: 2,
+                      boxShadow: isMobile ? '2px 0 4px rgba(0,0,0,0.1)' : 'none',
                       fontSize: isMobile ? '0.65rem' : '0.75rem',
                       padding: isMobile ? '4px 2px' : '8px 4px',
                       whiteSpace: 'nowrap',
@@ -1434,7 +1513,7 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
                           '&:hover': {
                             backgroundColor: isReadOnly ? 'inherit' : '#f5f5f5',
                           },
-                          minHeight: isMobile ? 20 : 25,
+                          minHeight: isMobile ? 32 : 25,
                           width: getColumnWidth(),
                           padding: isMobile ? '1px' : '2px',
                           verticalAlign: 'middle',
@@ -1514,7 +1593,7 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
                           '&:hover': {
                             backgroundColor: isReadOnly ? 'inherit' : '#f5f5f5',
                           },
-                          minHeight: isMobile ? 20 : 25,
+                          minHeight: isMobile ? 32 : 25,
                           width: getColumnWidth(),
                           padding: isMobile ? '1px' : '2px',
                           verticalAlign: 'middle',
@@ -1576,7 +1655,8 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
                       width: getNameColumnWidth(),
                       position: 'sticky',
                       left: 0,
-                      zIndex: 1,
+                      zIndex: 2,
+                      boxShadow: isMobile ? '2px 0 4px rgba(0,0,0,0.1)' : 'none',
                       fontSize: isMobile ? '0.65rem' : '0.75rem',
                       padding: isMobile ? '4px 2px' : '8px 4px',
                       whiteSpace: 'nowrap',
@@ -1613,7 +1693,7 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
                           '&:hover': {
                             backgroundColor: isReadOnly ? 'inherit' : '#f5f5f5',
                           },
-                          minHeight: isMobile ? 20 : 25,
+                          minHeight: isMobile ? 32 : 25,
                           width: getColumnWidth(),
                           padding: isMobile ? '1px' : '2px',
                           verticalAlign: 'middle',
@@ -1693,7 +1773,7 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
                           '&:hover': {
                             backgroundColor: isReadOnly ? 'inherit' : '#f5f5f5',
                           },
-                          minHeight: isMobile ? 20 : 25,
+                          minHeight: isMobile ? 32 : 25,
                           width: getColumnWidth(),
                           padding: isMobile ? '1px' : '2px',
                           verticalAlign: 'middle',
@@ -1793,7 +1873,7 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
                         '&:hover': {
                           backgroundColor: isReadOnly ? 'inherit' : '#f5f5f5',
                         },
-                        minHeight: isMobile ? 40 : 50,
+                        minHeight: isMobile ? 48 : 50,
                         width: getColumnWidth(),
                         padding: isMobile ? '2px 1px' : '4px 2px',
                         verticalAlign: 'middle',
@@ -1864,6 +1944,21 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
           </TableBody>
         </Table>
       </TableContainer>
+      
+      {/* Mobile scroll indicator */}
+      {isMobile && (
+        <Box sx={{ 
+          mt: 1, 
+          p: 1, 
+          backgroundColor: '#f5f5f5', 
+          borderRadius: 1,
+          textAlign: 'center'
+        }}>
+          <Typography variant="caption" sx={{ fontFamily: 'Kanit', color: '#666' }}>
+            คลิก/แตะช่องเพื่อแก้ไข • เลื่อนซ้าย-ขวาเพื่อดูวันอื่นๆ • ใช้ปุ่มด้านบนเพื่อไปยังวันที่ต้องการ
+          </Typography>
+        </Box>
+      )}
     </Box>
   );
 };
