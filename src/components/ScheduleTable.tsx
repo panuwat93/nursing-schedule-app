@@ -73,6 +73,7 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
   const [editValue, setEditValue] = useState<string>('');
   const [selectedCells, setSelectedCells] = useState<{ nurseId: string; date: string; shiftType?: 'morning' | 'afternoon' | 'night' }[]>([]);
   const [showColorPicker, setShowColorPicker] = useState<'background' | 'text' | null>(null);
+  const [currentFocus, setCurrentFocus] = useState<{ nurseId: string; date: string; shiftType?: 'morning' | 'afternoon' | 'night' } | null>(null);
   
   // โหมดการดู - ลบออกเพราะไม่ใช้แล้ว
   // const [viewMode, setViewMode] = useState<'summary' | 'individual'>('summary');
@@ -104,12 +105,64 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
     { name: 'ชมพูอ่อน', value: '#ffcce6' },
   ];
   const inputRef = useRef<HTMLInputElement>(null);
+  const tableRef = useRef<HTMLDivElement>(null);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const isTablet = useMediaQuery(theme.breakpoints.down('lg'));
 
   const days = getMonthDays(year, month);
   const allStaff = [...nurses, ...assistants];
+
+  // สร้างโครงสร้างข้อมูลสำหรับการเลื่อนด้วยลูกศร
+  const createCellMatrix = () => {
+    const matrix: { nurseId: string; date: string; shiftType?: 'morning' | 'afternoon' | 'night' }[][] = [];
+    
+    // เพิ่มพยาบาล
+    nurses.forEach(nurse => {
+      const morningRow: { nurseId: string; date: string; shiftType?: 'morning' | 'afternoon' | 'night' }[] = [];
+      const afternoonRow: { nurseId: string; date: string; shiftType?: 'morning' | 'afternoon' | 'night' }[] = [];
+      
+      days.forEach(day => {
+        const dateStr = format(day, 'yyyy-MM-dd');
+        morningRow.push({ nurseId: nurse.id, date: dateStr, shiftType: 'morning' });
+        afternoonRow.push({ nurseId: nurse.id, date: dateStr, shiftType: 'afternoon' });
+      });
+      
+      matrix.push(morningRow);
+      matrix.push(afternoonRow);
+    });
+    
+    // เพิ่มผู้ช่วยเต็มเวลา
+    assistants.filter(staff => !staff.isPartTime).forEach(assistant => {
+      const morningRow: { nurseId: string; date: string; shiftType?: 'morning' | 'afternoon' | 'night' }[] = [];
+      const afternoonRow: { nurseId: string; date: string; shiftType?: 'morning' | 'afternoon' | 'night' }[] = [];
+      
+      days.forEach(day => {
+        const dateStr = format(day, 'yyyy-MM-dd');
+        morningRow.push({ nurseId: assistant.id, date: dateStr, shiftType: 'morning' });
+        afternoonRow.push({ nurseId: assistant.id, date: dateStr, shiftType: 'afternoon' });
+      });
+      
+      matrix.push(morningRow);
+      matrix.push(afternoonRow);
+    });
+    
+    // เพิ่มผู้ช่วยพาร์ทไทม์
+    assistants.filter(staff => staff.isPartTime).forEach(assistant => {
+      const row: { nurseId: string; date: string; shiftType?: 'morning' | 'afternoon' | 'night' }[] = [];
+      
+      days.forEach(day => {
+        const dateStr = format(day, 'yyyy-MM-dd');
+        row.push({ nurseId: assistant.id, date: dateStr });
+      });
+      
+      matrix.push(row);
+    });
+    
+    return matrix;
+  };
+
+  const cellMatrix = createCellMatrix();
 
   const getShiftForNurse = (nurseId: string, date: string, shiftType?: 'morning' | 'afternoon' | 'night'): Shift | null => {
     const entry = schedule.find(e => e.nurseId === nurseId && e.date === date && e.shiftType === shiftType);
@@ -133,8 +186,160 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
     }
   }, [editingCell]);
 
+  // ตั้งค่าเริ่มต้นสำหรับ currentFocus
+  useEffect(() => {
+    if (!currentFocus && cellMatrix.length > 0 && cellMatrix[0].length > 0) {
+      setCurrentFocus(cellMatrix[0][0]);
+    }
+  }, [currentFocus, cellMatrix]);
+
+  // จัดการการเลื่อนด้วยลูกศร
+  const handleTableKeyDown = (event: React.KeyboardEvent) => {
+    if (!currentFocus) return;
+
+    const currentRowIndex = cellMatrix.findIndex(row => 
+      row.some(cell => 
+        cell.nurseId === currentFocus.nurseId && 
+        cell.date === currentFocus.date && 
+        cell.shiftType === currentFocus.shiftType
+      )
+    );
+
+    if (currentRowIndex === -1) return;
+
+    const currentRow = cellMatrix[currentRowIndex];
+    const currentColIndex = currentRow.findIndex(cell => 
+      cell.nurseId === currentFocus.nurseId && 
+      cell.date === currentFocus.date && 
+      cell.shiftType === currentFocus.shiftType
+    );
+
+    if (currentColIndex === -1) return;
+
+    let newRowIndex = currentRowIndex;
+    let newColIndex = currentColIndex;
+
+    switch (event.key) {
+      case 'ArrowUp':
+        if (currentRowIndex > 0) {
+          newRowIndex = currentRowIndex - 1;
+          // ตรวจสอบว่าคอลัมน์ใหม่มีอยู่หรือไม่
+          if (newColIndex >= cellMatrix[newRowIndex].length) {
+            newColIndex = cellMatrix[newRowIndex].length - 1;
+          }
+        }
+        break;
+      case 'ArrowDown':
+        if (currentRowIndex < cellMatrix.length - 1) {
+          newRowIndex = currentRowIndex + 1;
+          // ตรวจสอบว่าคอลัมน์ใหม่มีอยู่หรือไม่
+          if (newColIndex >= cellMatrix[newRowIndex].length) {
+            newColIndex = cellMatrix[newRowIndex].length - 1;
+          }
+        }
+        break;
+      case 'ArrowLeft':
+        if (currentColIndex > 0) {
+          newColIndex = currentColIndex - 1;
+        }
+        break;
+      case 'ArrowRight':
+        if (currentColIndex < currentRow.length - 1) {
+          newColIndex = currentColIndex + 1;
+        }
+        break;
+      case 'Enter':
+      case 'F2':
+        // เริ่มการแก้ไข
+        const newCell = cellMatrix[newRowIndex][newColIndex];
+        if (newCell) {
+          const currentEntry = schedule.find(e => 
+            e.nurseId === newCell.nurseId && 
+            e.date === newCell.date && 
+            e.shiftType === newCell.shiftType
+          );
+          const currentShift = getShiftForNurse(newCell.nurseId, newCell.date, newCell.shiftType);
+          
+          setEditingCell(newCell);
+          setEditValue(currentEntry?.customText || currentShift?.code || '');
+        }
+        event.preventDefault();
+        return;
+      case 'Tab':
+        // เลื่อนไปยังช่องถัดไป
+        if (event.shiftKey) {
+          // Shift+Tab - เลื่อนไปทางซ้าย
+          if (currentColIndex > 0) {
+            newColIndex = currentColIndex - 1;
+          } else if (currentRowIndex > 0) {
+            newRowIndex = currentRowIndex - 1;
+            newColIndex = cellMatrix[newRowIndex].length - 1;
+          }
+        } else {
+          // Tab - เลื่อนไปทางขวา
+          if (currentColIndex < currentRow.length - 1) {
+            newColIndex = currentColIndex + 1;
+          } else if (currentRowIndex < cellMatrix.length - 1) {
+            newRowIndex = currentRowIndex + 1;
+            newColIndex = 0;
+          }
+        }
+        event.preventDefault();
+        break;
+      default:
+        // ถ้าเป็นตัวอักษร ให้เริ่มการแก้ไข
+        if (event.key.length === 1 && !event.ctrlKey && !event.altKey && !event.metaKey) {
+          const newCell = cellMatrix[newRowIndex][newColIndex];
+          if (newCell) {
+            const currentEntry = schedule.find(e => 
+              e.nurseId === newCell.nurseId && 
+              e.date === newCell.date && 
+              e.shiftType === newCell.shiftType
+            );
+            const currentShift = getShiftForNurse(newCell.nurseId, newCell.date, newCell.shiftType);
+            
+            setEditingCell(newCell);
+            setEditValue(event.key);
+          }
+          event.preventDefault();
+          return;
+        }
+        return;
+    }
+
+    // อัปเดตตำแหน่งที่เลือก
+    if (newRowIndex !== currentRowIndex || newColIndex !== currentColIndex) {
+      const newCell = cellMatrix[newRowIndex][newColIndex];
+      if (newCell) {
+        setCurrentFocus(newCell);
+        // เลื่อนตารางให้เห็นช่องที่เลือก
+        scrollToCell(newCell);
+      }
+    }
+  };
+
+  // เลื่อนตารางให้เห็นช่องที่เลือก
+  const scrollToCell = (cell: { nurseId: string; date: string; shiftType?: 'morning' | 'afternoon' | 'night' }) => {
+    if (!tableRef.current) return;
+
+    const cellElement = tableRef.current.querySelector(
+      `[data-nurse-id="${cell.nurseId}"][data-date="${cell.date}"][data-shift-type="${cell.shiftType || ''}"]`
+    ) as HTMLElement;
+
+    if (cellElement) {
+      cellElement.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+        inline: 'center'
+      });
+    }
+  };
+
   const handleCellClick = (nurseId: string, date: string, event: React.MouseEvent, shiftType?: 'morning' | 'afternoon' | 'night') => {
     if (isReadOnly) return;
+    
+    // อัปเดตตำแหน่งที่เลือก
+    setCurrentFocus({ nurseId, date, shiftType });
     
     // ถ้ากด Ctrl/Cmd ให้เลือกหลายช่อง
     if (event.ctrlKey || event.metaKey) {
@@ -156,8 +361,6 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
     setEditingCell({ nurseId, date, shiftType });
     setEditValue(currentEntry?.customText || currentShift?.code || '');
   };
-
-
 
   const handleSaveEdit = () => {
     if (!editingCell) return;
@@ -194,6 +397,46 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
     }
 
     onScheduleChange(newSchedule);
+    
+    // เลื่อนไปยังช่องถัดไปหลังจากบันทึก
+    const currentRowIndex = cellMatrix.findIndex(row => 
+      row.some(cell => 
+        cell.nurseId === editingCell.nurseId && 
+        cell.date === editingCell.date && 
+        cell.shiftType === editingCell.shiftType
+      )
+    );
+
+    if (currentRowIndex !== -1) {
+      const currentRow = cellMatrix[currentRowIndex];
+      const currentColIndex = currentRow.findIndex(cell => 
+        cell.nurseId === editingCell.nurseId && 
+        cell.date === editingCell.date && 
+        cell.shiftType === editingCell.shiftType
+      );
+
+      if (currentColIndex !== -1) {
+        let newColIndex = currentColIndex + 1;
+        let newRowIndex = currentRowIndex;
+
+        if (newColIndex >= currentRow.length) {
+          newColIndex = 0;
+          newRowIndex = currentRowIndex + 1;
+        }
+
+        if (newRowIndex < cellMatrix.length) {
+          const newCell = cellMatrix[newRowIndex][newColIndex];
+          if (newCell) {
+            setCurrentFocus(newCell);
+            setEditingCell(newCell);
+            setEditValue('');
+            scrollToCell(newCell);
+            return;
+          }
+        }
+      }
+    }
+
     setEditingCell(null);
     setEditValue('');
   };
@@ -204,6 +447,9 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
     } else if (event.key === 'Escape') {
       setEditingCell(null);
       setEditValue('');
+    } else if (event.key === 'Tab') {
+      // ป้องกันการเลื่อนไปยังช่องถัดไปใน input
+      event.preventDefault();
     }
   };
 
@@ -577,6 +823,7 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
   const renderShiftCell = (shift: Shift | null, nurseId: string, date: string, shiftType?: 'morning' | 'afternoon' | 'night') => {
     const entry = schedule.find(e => e.nurseId === nurseId && e.date === date && e.shiftType === shiftType);
     const isSelected = selectedCells.some(cell => cell.nurseId === nurseId && cell.date === date && cell.shiftType === shiftType);
+    const isFocused = currentFocus?.nurseId === nurseId && currentFocus?.date === date && currentFocus?.shiftType === shiftType;
 
     if (!shift) {
       // แสดงช่องว่างที่สามารถ double-click ได้
@@ -585,7 +832,7 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
           sx={{
             width: isMobile ? '20px' : '30px',
             height: isMobile ? '18px' : '22px',
-            border: isSelected ? '2px solid #1976d2' : '1px dashed #ccc',
+            border: isFocused ? '3px solid #ff6b35' : (isSelected ? '2px solid #1976d2' : '1px dashed #ccc'),
             borderRadius: '4px',
             display: 'flex',
             alignItems: 'center',
@@ -616,7 +863,7 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
           width: '100%',
           height: '100%',
           borderRadius: '0',
-          border: isSelected ? '2px solid #1976d2' : 'none',
+          border: isFocused ? '3px solid #ff6b35' : (isSelected ? '2px solid #1976d2' : 'none'),
           '& .MuiChip-label': {
             padding: isMobile ? '2px' : '4px',
             width: '100%',
@@ -1327,6 +1574,7 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
       </Box>
 
           <TableContainer 
+            ref={tableRef}
             component={Paper}
             data-testid="table-container"
             sx={{ 
@@ -1345,9 +1593,9 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
                 touchAction: 'manipulation', // ป้องกันการ zoom
               })
             }}
-        onKeyDown={handleKeyDown}
-        tabIndex={0}
-      >
+            onKeyDown={handleTableKeyDown}
+            tabIndex={0}
+          >
         <Table stickyHeader size="small" sx={{ tableLayout: 'fixed', width: '100%' }}>
           <TableHead>
             <TableRow>
@@ -1506,6 +1754,9 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
                         key={`${staff.id}-${dateStr}-morning`}
                         align="center"
                         onClick={(e) => handleCellClick(staff.id, dateStr, e, 'morning')}
+                        data-nurse-id={staff.id}
+                        data-date={dateStr}
+                        data-shift-type="morning"
                         sx={{
                           cursor: isReadOnly ? 'default' : 'pointer',
                           backgroundColor: publicHoliday.isHoliday ? '#ffebee' : (holiday ? '#fff3e0' : 'white'),
@@ -1586,6 +1837,9 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
                         key={`${staff.id}-${dateStr}-afternoon`}
                         align="center"
                         onClick={(e) => handleCellClick(staff.id, dateStr, e, 'afternoon')}
+                        data-nurse-id={staff.id}
+                        data-date={dateStr}
+                        data-shift-type="afternoon"
                         sx={{
                           cursor: isReadOnly ? 'default' : 'pointer',
                           backgroundColor: publicHoliday.isHoliday ? '#ffebee' : (holiday ? '#fff3e0' : 'white'),
@@ -1686,6 +1940,9 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
                         key={`${staff.id}-${dateStr}-morning`}
                         align="center"
                         onClick={(e) => handleCellClick(staff.id, dateStr, e, 'morning')}
+                        data-nurse-id={staff.id}
+                        data-date={dateStr}
+                        data-shift-type="morning"
                         sx={{
                           cursor: isReadOnly ? 'default' : 'pointer',
                           backgroundColor: publicHoliday.isHoliday ? '#ffebee' : (holiday ? '#fff3e0' : 'white'),
@@ -1766,6 +2023,9 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
                         key={`${staff.id}-${dateStr}-afternoon`}
                         align="center"
                         onClick={(e) => handleCellClick(staff.id, dateStr, e, 'afternoon')}
+                        data-nurse-id={staff.id}
+                        data-date={dateStr}
+                        data-shift-type="afternoon"
                         sx={{
                           cursor: isReadOnly ? 'default' : 'pointer',
                           backgroundColor: publicHoliday.isHoliday ? '#ffebee' : (holiday ? '#fff3e0' : 'white'),
@@ -1866,6 +2126,9 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
                       key={`${staff.id}-${dateStr}`}
                       align="center"
                       onClick={(e) => handleCellClick(staff.id, dateStr, e)}
+                      data-nurse-id={staff.id}
+                      data-date={dateStr}
+                      data-shift-type=""
                       sx={{
                         cursor: isReadOnly ? 'default' : 'pointer',
                         backgroundColor: publicHoliday.isHoliday ? '#ffebee' : (holiday ? '#fff3e0' : 'white'),
@@ -1956,6 +2219,22 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
         }}>
           <Typography variant="caption" sx={{ fontFamily: 'Kanit', color: '#666' }}>
             คลิก/แตะช่องเพื่อแก้ไข • เลื่อนซ้าย-ขวาเพื่อดูวันอื่นๆ • ใช้ปุ่มด้านบนเพื่อไปยังวันที่ต้องการ
+          </Typography>
+        </Box>
+      )}
+
+      {/* Desktop keyboard navigation guide */}
+      {!isMobile && (
+        <Box sx={{ 
+          mt: 1, 
+          p: 1, 
+          backgroundColor: '#e3f2fd', 
+          borderRadius: 1,
+          textAlign: 'center',
+          border: '1px solid #bbdefb'
+        }}>
+          <Typography variant="caption" sx={{ fontFamily: 'Kanit', color: '#1565c0', fontWeight: 'bold' }}>
+            💡 เคล็ดลับการใช้งาน: ใช้ลูกศร ↑↓←→ เพื่อเลื่อนระหว่างช่อง • กด Enter หรือ F2 เพื่อแก้ไข • พิมพ์ตัวอักษรเพื่อเริ่มแก้ไขทันที • Tab เพื่อเลื่อนไปช่องถัดไป
           </Typography>
         </Box>
       )}
