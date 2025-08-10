@@ -20,7 +20,8 @@ import {
   LocalHospital, 
   Schedule, 
   Assignment, 
-  AdminPanelSettings, 
+  Login,
+  Logout,
   Favorite,
   Menu as MenuIcon,
   Close as CloseIcon
@@ -89,11 +90,7 @@ const Header: React.FC<HeaderProps> = ({
         label: 'ตารางเวรก่อนแลก',
         icon: <Schedule />,
       },
-      {
-        key: 'admin-settings',
-        label: 'ตั้งค่า',
-        icon: <AdminPanelSettings />,
-      }
+
     );
   }
 
@@ -127,7 +124,7 @@ const Header: React.FC<HeaderProps> = ({
     menuItems.push({
       key: 'admin',
       label: 'เข้าสู่ระบบ ADMIN',
-      icon: <AdminPanelSettings />,
+      icon: <Login />,
     });
   }
 
@@ -300,7 +297,7 @@ const Header: React.FC<HeaderProps> = ({
                   }}
                 >
                   <ListItemIcon sx={{ color: '#f44336' }}>
-                    <AdminPanelSettings />
+                    <Logout />
                   </ListItemIcon>
                   <ListItemText 
                     primary="ออกจากระบบ"

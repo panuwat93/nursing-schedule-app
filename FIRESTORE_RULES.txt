@@ -21,5 +21,11 @@ service cloud.firestore {
     match /staffAccounts/{document} {
       allow read, write: if true;
     }
+    
+    // อนุญาตให้อ่านและเขียนข้อมูลระบบได้ทุกคน (สำหรับการทดสอบ)
+    // ในการใช้งานจริงควรเพิ่ม authentication
+    match /system/{document} {
+      allow read, write: if true;
+    }
   }
 }

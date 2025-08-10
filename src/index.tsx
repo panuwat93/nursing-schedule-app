@@ -15,7 +15,17 @@ root.render(
 // Register service worker for PWA functionality
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
+    // Check if we're in development mode
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    
+    if (isDevelopment) {
+      console.log('Development mode: Skipping service worker registration');
+      return;
+    }
+    
+    navigator.serviceWorker.register('/sw.js', {
+      scope: '/'
+    })
       .then((registration) => {
         console.log('SW registered: ', registration);
         
@@ -36,6 +46,10 @@ if ('serviceWorker' in navigator) {
       })
       .catch((registrationError) => {
         console.log('SW registration failed: ', registrationError);
+        // Don't show error in console for development
+        if (!isDevelopment) {
+          console.error('Service Worker registration failed:', registrationError);
+        }
       });
   });
 }
