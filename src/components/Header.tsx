@@ -88,6 +88,11 @@ const Header: React.FC<HeaderProps> = ({
         key: 'original-schedule',
         label: 'ตารางเวรก่อนแลก',
         icon: <Schedule />,
+      },
+      {
+        key: 'admin-settings',
+        label: 'ตั้งค่า',
+        icon: <AdminPanelSettings />,
       }
     );
   }

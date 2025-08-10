@@ -10,6 +10,7 @@ import AdminLogin from './components/AdminLogin';
 import StaffLogin from './components/StaffLogin';
 import StaffRegistration from './components/StaffRegistration';
 import PersonalCalendar from './components/PersonalCalendar';
+import AdminSettings from './components/AdminSettings';
 import { ScheduleEntry, WorkAssignment, CustomHoliday } from './types';
 // import { nurses, assistants } from './data/nurses';
 import {
@@ -548,6 +549,13 @@ const App: React.FC = () => {
               currentStaffId={currentStaffId}
             />
           </Box>
+        );
+
+      case 'admin-settings':
+        return (
+          <AdminSettings
+            onBack={() => setCurrentPage('admin-schedule')}
+          />
         );
 
       default:
