@@ -299,7 +299,16 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
             const currentShift = getShiftForNurse(newCell.nurseId, newCell.date, newCell.shiftType);
             
             setEditingCell(newCell);
-            setEditValue(event.key);
+            // ตรวจสอบว่ากำลังแก้ไขช่องเดิมอยู่หรือไม่
+            if (editingCell?.nurseId === newCell.nurseId && 
+                editingCell?.date === newCell.date && 
+                editingCell?.shiftType === newCell.shiftType) {
+              // ถ้าเป็นช่องเดิม ให้เพิ่มตัวอักษรใหม่ต่อจากตัวเดิม
+              setEditValue(prev => prev + event.key);
+            } else {
+              // ถ้าเป็นช่องใหม่ ให้เริ่มต้นด้วยตัวอักษรใหม่
+              setEditValue(event.key);
+            }
           }
           event.preventDefault();
           return;
