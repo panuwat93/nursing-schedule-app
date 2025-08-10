@@ -311,11 +311,63 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
     if (newRowIndex !== currentRowIndex || newColIndex !== currentColIndex) {
       const newCell = cellMatrix[newRowIndex][newColIndex];
       if (newCell) {
+        // บันทึกข้อความที่พิมพ์ไว้ในช่องปัจจุบันก่อนเลื่อน
+        if (editingCell && editValue.trim() !== '') {
+          saveEditValue(editingCell.nurseId, editingCell.date, editingCell.shiftType, editValue);
+        }
+        
         setCurrentFocus(newCell);
         // เลื่อนตารางให้เห็นช่องที่เลือก
         scrollToCell(newCell);
+        
+        // เริ่มการแก้ไขในช่องใหม่
+        const currentEntry = schedule.find(e => 
+          e.nurseId === newCell.nurseId && 
+          e.date === newCell.date && 
+          e.shiftType === newCell.shiftType
+        );
+        const currentShift = getShiftForNurse(newCell.nurseId, newCell.date, newCell.shiftType);
+        
+        setEditingCell(newCell);
+        setEditValue(currentEntry?.customText || currentShift?.code || '');
       }
     }
+  };
+
+  // ฟังก์ชันบันทึกข้อความที่พิมพ์ไว้
+  const saveEditValue = (nurseId: string, date: string, shiftType: 'morning' | 'afternoon' | 'night' | undefined, value: string) => {
+    if (value.trim() === '') return;
+
+    const newSchedule = schedule.filter(
+      e => !(e.nurseId === nurseId && e.date === date && e.shiftType === shiftType)
+    );
+
+    // หา shift ที่ตรงกับ value
+    const allShifts = [...nurseShifts, ...assistantShifts];
+    const matchingShift = allShifts.find(s => s.code === value.trim());
+    
+    // ตรวจสอบข้อความพิเศษและจัดรูปแบบสีอัตโนมัติ
+    let formatting = undefined;
+    const trimmedValue = value.trim().toUpperCase();
+    
+    if (trimmedValue === 'O') {
+      formatting = { textColor: '#ff0000', backgroundColor: '#ffffff' }; // ตัวอักษรสีแดงพื้นสีขาว
+    } else if (trimmedValue === 'VA') {
+      formatting = { backgroundColor: '#ff0000', textColor: '#ffffff' }; // พื้นแดงตัวอักษรสีขาว
+    } else if (trimmedValue === 'MB') {
+      formatting = { backgroundColor: '#00ff00', textColor: '#000000' }; // พื้นเขียวตัวอักษรดำ
+    }
+    
+    newSchedule.push({
+      date: date,
+      nurseId: nurseId,
+      shiftId: matchingShift?.id || 'other',
+      ...(matchingShift ? {} : { customText: value.trim() }),
+      ...(shiftType ? { shiftType: shiftType } : {}),
+      ...(formatting && Object.keys(formatting).length > 0 ? { formatting } : {}),
+    });
+
+    onScheduleChange(newSchedule);
   };
 
   // เลื่อนตารางให้เห็นช่องที่เลือก
@@ -397,46 +449,6 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
     }
 
     onScheduleChange(newSchedule);
-    
-    // เลื่อนไปยังช่องถัดไปหลังจากบันทึก
-    const currentRowIndex = cellMatrix.findIndex(row => 
-      row.some(cell => 
-        cell.nurseId === editingCell.nurseId && 
-        cell.date === editingCell.date && 
-        cell.shiftType === editingCell.shiftType
-      )
-    );
-
-    if (currentRowIndex !== -1) {
-      const currentRow = cellMatrix[currentRowIndex];
-      const currentColIndex = currentRow.findIndex(cell => 
-        cell.nurseId === editingCell.nurseId && 
-        cell.date === editingCell.date && 
-        cell.shiftType === editingCell.shiftType
-      );
-
-      if (currentColIndex !== -1) {
-        let newColIndex = currentColIndex + 1;
-        let newRowIndex = currentRowIndex;
-
-        if (newColIndex >= currentRow.length) {
-          newColIndex = 0;
-          newRowIndex = currentRowIndex + 1;
-        }
-
-        if (newRowIndex < cellMatrix.length) {
-          const newCell = cellMatrix[newRowIndex][newColIndex];
-          if (newCell) {
-            setCurrentFocus(newCell);
-            setEditingCell(newCell);
-            setEditValue('');
-            scrollToCell(newCell);
-            return;
-          }
-        }
-      }
-    }
-
     setEditingCell(null);
     setEditValue('');
   };
