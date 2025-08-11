@@ -348,168 +348,246 @@ const MonthlySummary: React.FC<MonthlySummaryProps> = ({
   }, [year, month, customHolidays, getThaiPublicHolidays]);
 
   return (
-    <Paper sx={{ p: 2, mb: 2 }}>
-      <Typography variant="h6" sx={{ mb: 1.5, fontFamily: 'Kanit', fontSize: '1.1rem' }}>
-        สรุปวันทำการประจำเดือน
-      </Typography>
-      
-      <Grid container spacing={2}>
-        <Grid item xs={12} sm={6}>
-          <Box>
-            <Typography variant="subtitle2" sx={{ fontFamily: 'Kanit', fontWeight: 'bold', mb: 0.5, fontSize: '0.9rem' }}>
-              วันทำการ
-            </Typography>
-            <Chip 
-              label={`${daysInfo.actualWorkingDays} วัน`} 
-              color="primary" 
-              size="small"
-              sx={{ fontFamily: 'Kanit', fontSize: '0.8rem' }}
-            />
-          </Box>
-        </Grid>
-        
-        <Grid item xs={12} sm={6}>
-          <Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-              <Typography variant="subtitle2" sx={{ fontFamily: 'Kanit', fontWeight: 'bold', fontSize: '0.9rem' }}>
-                วันหยุดราชการ
-              </Typography>
-              {isAdmin && (
-                <Tooltip title="เพิ่มวันหยุด">
-                  <IconButton
-                    size="small"
-                    color="primary"
-                    onClick={() => setIsAddDialogOpen(true)}
-                    sx={{ fontFamily: 'Kanit', width: 28, height: 28 }}
-                  >
-                    <AddIcon sx={{ fontSize: '1rem' }} />
-                  </IconButton>
-                </Tooltip>
-              )}
-            </Box>
-            
-            {loading && (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <CircularProgress size={14} />
-                <Typography variant="body2" sx={{ fontFamily: 'Kanit', color: 'text.secondary', fontSize: '0.8rem' }}>
-                  กำลังดึงข้อมูลวันหยุดราชการ...
-                </Typography>
-              </Box>
-            )}
-            
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-              {allHolidays.length > 0 ? (
-                allHolidays.map((holiday, index) => (
-                  <Box key={`${holiday.date}-${holiday.name}-${index}`} sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
-                    <Chip
-                      label={`${format(new Date(holiday.date), 'd')} ${holiday.name}`}
-                      size="small"
-                      color={holiday.type === 'custom' ? 'success' : 'error'}
-                      variant="outlined"
-                      sx={{ fontFamily: 'Kanit', fontSize: '0.7rem', height: '24px' }}
-                    />
-                    {isAdmin && (
-                      <Tooltip title="ลบวันหยุด">
-                        <IconButton
-                          size="small"
-                          color="error"
-                          onClick={() => openDeleteDialog(holiday)}
-                          sx={{ 
-                            fontFamily: 'Kanit',
-                            width: 18,
-                            height: 18,
-                            '& .MuiSvgIcon-root': {
-                              fontSize: '0.7rem'
-                            }
-                          }}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
-                    )}
-                  </Box>
-                ))
-              ) : !loading ? (
-                <Typography variant="body2" sx={{ fontFamily: 'Kanit', color: 'text.secondary', fontSize: '0.8rem' }}>
-                  ไม่มีวันหยุดราชการในเดือนนี้
-                </Typography>
-              ) : null}
-            </Box>
-          </Box>
-        </Grid>
-      </Grid>
-
-      {/* Add Holiday Dialog */}
-      <Dialog open={isAddDialogOpen} onClose={closeAddDialog} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ fontFamily: 'Kanit' }}>
-          เพิ่มวันหยุด
-        </DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
-            <TextField
-              fullWidth
-              label="เลือกวันที่"
-              type="date"
-              value={newHoliday.date}
-              onChange={(e) => setNewHoliday({ ...newHoliday, date: e.target.value })}
-              InputLabelProps={{ 
-                sx: { fontFamily: 'Kanit' },
-                shrink: true
-              }}
-              sx={{ fontFamily: 'Kanit' }}
-            />
-            
-            <TextField
-              fullWidth
-              label="ชื่อวันหยุด"
-              value={newHoliday.name}
-              onChange={(e) => setNewHoliday({ ...newHoliday, name: e.target.value })}
-              placeholder="เช่น วันหยุดชดเชย, วันหยุดพิเศษ"
-              InputLabelProps={{ sx: { fontFamily: 'Kanit' } }}
-              sx={{ fontFamily: 'Kanit' }}
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={closeAddDialog} sx={{ fontFamily: 'Kanit' }}>
-            ยกเลิก
-          </Button>
-          <Button 
-            onClick={handleAddHoliday} 
-            variant="contained" 
-            disabled={!newHoliday.date || !newHoliday.name.trim()}
-            sx={{ fontFamily: 'Kanit' }}
+    <>
+      <Paper
+        elevation={3}
+        sx={{
+          p: 3,
+          mb: 3,
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          borderRadius: '20px',
+          boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
+          border: '2px solid rgba(255,255,255,0.1)',
+          position: 'relative',
+          overflow: 'hidden',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '4px',
+            background: 'linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4)',
+            borderRadius: '20px 20px 0 0'
+          }
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+          <Box
+            sx={{
+              width: 50,
+              height: 50,
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #ff6b6b, #4ecdc4)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              mr: 2,
+              boxShadow: '0 8px 16px rgba(0,0,0,0.2)',
+              fontSize: '24px'
+            }}
           >
-            เพิ่ม
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Delete Holiday Dialog */}
-      <Dialog open={isDeleteDialogOpen} onClose={closeDeleteDialog} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ fontFamily: 'Kanit' }}>
-          ยืนยันการลบวันหยุด
-        </DialogTitle>
-        <DialogContent>
-          <Typography sx={{ fontFamily: 'Kanit', mt: 2 }}>
-            คุณต้องการลบวันหยุด "{holidayToDelete?.name}" ในวันที่ {holidayToDelete ? format(new Date(holidayToDelete.date), 'd MMMM yyyy', { locale: th }) : ''} หรือไม่?
+            📊
+          </Box>
+          <Typography
+            variant="h5"
+            sx={{
+              background: 'linear-gradient(45deg, #ff6b6b, #4ecdc4)',
+              backgroundClip: 'text',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              fontWeight: 'bold',
+              textShadow: '0 2px 4px rgba(0,0,0,0.1)'
+            }}
+          >
+            สรุปวันทำการประจำเดือน
           </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={closeDeleteDialog} sx={{ fontFamily: 'Kanit' }}>
-            ยกเลิก
-          </Button>
-          <Button 
-            onClick={() => holidayToDelete && handleDeleteHoliday(holidayToDelete)} 
-            variant="contained" 
-            color="error"
-            sx={{ fontFamily: 'Kanit' }}
+        </Box>
+
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={6}>
+            <Box
+              sx={{
+                p: 2,
+                borderRadius: '15px',
+                background: 'rgba(255,255,255,0.1)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                boxShadow: '0 8px 16px rgba(0,0,0,0.1)',
+                backdropFilter: 'blur(10px)'
+              }}
+            >
+              <Typography
+                variant="h6"
+                sx={{
+                  color: 'white',
+                  mb: 2,
+                  fontWeight: 'bold',
+                  textAlign: 'center',
+                  textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                }}
+              >
+                🏥 วันทำการ
+              </Typography>
+              <Box sx={{ textAlign: 'center' }}>
+                <Chip
+                  label={`${daysInfo.actualWorkingDays} วัน`}
+                  size="medium"
+                  variant="filled"
+                  sx={{
+                    background: 'linear-gradient(135deg, #4caf50, #45a049)',
+                    color: 'white',
+                    fontSize: '1.2rem',
+                    fontWeight: 'bold',
+                    padding: '8px 16px',
+                    '&:hover': {
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 8px 16px rgba(76, 175, 80, 0.4)',
+                      transition: 'all 0.3s ease'
+                    }
+                  }}
+                />
+              </Box>
+            </Box>
+          </Grid>
+
+          <Grid item xs={12} md={6}>
+            <Box
+              sx={{
+                p: 2,
+                borderRadius: '15px',
+                background: 'rgba(255,255,255,0.1)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                boxShadow: '0 8px 16px rgba(0,0,0,0.1)',
+                backdropFilter: 'blur(10px)'
+              }}
+            >
+              <Typography
+                variant="h6"
+                sx={{
+                  color: 'white',
+                  mb: 2,
+                  fontWeight: 'bold',
+                  textAlign: 'center',
+                  textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                }}
+              >
+                🎉 วันหยุดราชการ
+              </Typography>
+              <Box sx={{ textAlign: 'center' }}>
+                <IconButton
+                  onClick={() => setIsAddDialogOpen(true)}
+                  sx={{
+                    background: 'linear-gradient(135deg, #ff6b6b, #ee5a52)',
+                    color: 'white',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #ee5a52, #d63031)',
+                      transform: 'scale(1.1)',
+                      transition: 'all 0.3s ease'
+                    }
+                  }}
+                >
+                  <AddIcon />
+                </IconButton>
+              </Box>
+            </Box>
+          </Grid>
+        </Grid>
+
+        {loading && (
+          <Box sx={{ textAlign: 'center', mt: 3 }}>
+            <CircularProgress
+              sx={{
+                color: 'white',
+                mb: 2
+              }}
+            />
+            <Typography
+              variant="body2"
+              sx={{
+                color: 'white',
+                opacity: 0.8
+              }}
+            >
+              กำลังโหลดข้อมูล...
+            </Typography>
+          </Box>
+        )}
+
+        {allHolidays.length > 0 && (
+          <Box sx={{ mt: 3 }}>
+            <Typography
+              variant="h6"
+              sx={{
+                color: 'white',
+                mb: 2,
+                fontWeight: 'bold',
+                textAlign: 'center',
+                textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+              }}
+            >
+              รายการวันหยุด
+            </Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'center' }}>
+              {allHolidays.map((holiday, index) => (
+                <Chip
+                  key={`${holiday.date}-${holiday.name}-${index}`}
+                  label={`${format(new Date(holiday.date), 'd')} ${holiday.name}`}
+                  variant="filled"
+                  onDelete={() => openDeleteDialog(holiday)}
+                  sx={{
+                    background: 'linear-gradient(135deg, #ff6b6b, #ee5a52)',
+                    color: 'white',
+                    fontWeight: 'bold',
+                    boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+                    '&:hover': {
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 8px 16px rgba(255, 107, 107, 0.4)',
+                      transition: 'all 0.3s ease'
+                    },
+                    '& .MuiChip-deleteIcon': {
+                      color: 'white',
+                      '&:hover': {
+                        color: '#ffeaa7'
+                      }
+                    }
+                  }}
+                />
+              ))}
+            </Box>
+          </Box>
+        )}
+
+        {allHolidays.length === 0 && !loading && (
+          <Typography
+            variant="body1"
+            sx={{
+              color: 'white',
+              textAlign: 'center',
+              mt: 3,
+              opacity: 0.8,
+              fontStyle: 'italic'
+            }}
           >
-            ลบ
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Paper>
+            🎯 ไม่มีวันหยุดราชการในเดือนนี้
+          </Typography>
+        )}
+      </Paper>
+
+      <style>
+        {`
+          @keyframes fadeIn {
+            from {
+              opacity: 0;
+              transform: translateY(20px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+        `}
+      </style>
+    </>
   );
 };
 

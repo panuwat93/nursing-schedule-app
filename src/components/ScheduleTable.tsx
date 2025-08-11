@@ -577,14 +577,24 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
       <Toolbar 
         variant="dense" 
         sx={{ 
-          backgroundColor: '#f5f5f5', 
-          borderBottom: '1px solid #e0e0e0',
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          borderBottom: '2px solid rgba(255, 255, 255, 0.2)',
           gap: 1,
           flexWrap: 'wrap',
+          boxShadow: '0 4px 20px rgba(102, 126, 234, 0.3)',
+          borderRadius: '8px 8px 0 0',
+          margin: '0 8px',
+          marginTop: '8px',
         }}
       >
-        <Typography variant="subtitle2" sx={{ fontFamily: 'Kanit', mr: 1 }}>
-          จัดรูปแบบ:
+        <Typography variant="subtitle2" sx={{ 
+          fontFamily: 'Kanit', 
+          mr: 1, 
+          color: 'white',
+          fontWeight: 600,
+          textShadow: '0 1px 2px rgba(0,0,0,0.3)'
+        }}>
+          🎨 จัดรูปแบบ:
         </Typography>
         
         <ButtonGroup size="small" variant="outlined">
@@ -593,8 +603,14 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
               size="small"
               onClick={() => applyFormatting('bold', !currentFormatting.bold)}
               sx={{ 
-                backgroundColor: currentFormatting.bold ? '#e3f2fd' : 'transparent',
-                '&:hover': { backgroundColor: currentFormatting.bold ? '#bbdefb' : '#f5f5f5' }
+                backgroundColor: currentFormatting.bold ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 255, 255, 0.1)',
+                color: 'white',
+                borderColor: 'rgba(255, 255, 255, 0.3)',
+                '&:hover': { 
+                  backgroundColor: currentFormatting.bold ? 'rgba(255, 255, 255, 0.4)' : 'rgba(255, 255, 255, 0.2)',
+                  transform: 'scale(1.05)'
+                },
+                transition: 'all 0.2s ease'
               }}
             >
               <FormatBold />
@@ -606,8 +622,14 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
               size="small"
               onClick={() => applyFormatting('italic', !currentFormatting.italic)}
               sx={{ 
-                backgroundColor: currentFormatting.italic ? '#e3f2fd' : 'transparent',
-                '&:hover': { backgroundColor: currentFormatting.italic ? '#bbdefb' : '#f5f5f5' }
+                backgroundColor: currentFormatting.italic ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 255, 255, 0.1)',
+                color: 'white',
+                borderColor: 'rgba(255, 255, 255, 0.3)',
+                '&:hover': { 
+                  backgroundColor: currentFormatting.italic ? 'rgba(255, 255, 255, 0.4)' : 'rgba(255, 255, 255, 0.2)',
+                  transform: 'scale(1.05)'
+                },
+                transition: 'all 0.2s ease'
               }}
             >
               <FormatItalic />
@@ -619,8 +641,14 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
               size="small"
               onClick={() => applyFormatting('underline', !currentFormatting.underline)}
               sx={{ 
-                backgroundColor: currentFormatting.underline ? '#e3f2fd' : 'transparent',
-                '&:hover': { backgroundColor: currentFormatting.underline ? '#bbdefb' : '#f5f5f5' }
+                backgroundColor: currentFormatting.underline ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 255, 255, 0.1)',
+                color: 'white',
+                borderColor: 'rgba(255, 255, 255, 0.3)',
+                '&:hover': { 
+                  backgroundColor: currentFormatting.underline ? 'rgba(255, 255, 255, 0.4)' : 'rgba(255, 255, 255, 0.2)',
+                  transform: 'scale(1.05)'
+                },
+                transition: 'all 0.2s ease'
               }}
             >
               <FormatUnderlined />
@@ -628,7 +656,7 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
           </Tooltip>
         </ButtonGroup>
         
-        <Divider orientation="vertical" flexItem />
+        <Divider orientation="vertical" flexItem sx={{ backgroundColor: 'rgba(255, 255, 255, 0.3)' }} />
         
         <ButtonGroup size="small" variant="outlined">
           <Tooltip title="สีพื้นหลัง">
@@ -637,8 +665,14 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
                 size="small"
                 onClick={() => setShowColorPicker(showColorPicker === 'background' ? null : 'background')}
                 sx={{
-                  backgroundColor: currentFormatting.backgroundColor ? '#e3f2fd' : 'transparent',
-                  '&:hover': { backgroundColor: currentFormatting.backgroundColor ? '#bbdefb' : '#f5f5f5' }
+                  backgroundColor: currentFormatting.backgroundColor ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 255, 255, 0.1)',
+                  color: 'white',
+                  borderColor: 'rgba(255, 255, 255, 0.3)',
+                  '&:hover': { 
+                    backgroundColor: currentFormatting.backgroundColor ? 'rgba(255, 255, 255, 0.4)' : 'rgba(255, 255, 255, 0.2)',
+                    transform: 'scale(1.05)'
+                  },
+                  transition: 'all 0.2s ease'
                 }}
               >
                 <FormatColorFill />
@@ -651,14 +685,15 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
                     left: 0,
                     zIndex: 1000,
                     backgroundColor: 'white',
-                    border: '1px solid #ccc',
-                    borderRadius: '4px',
-                    padding: '8px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                    border: '2px solid #667eea',
+                    borderRadius: '8px',
+                    padding: '12px',
+                    boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3)',
                     display: 'grid',
                     gridTemplateColumns: 'repeat(6, 1fr)',
-                    gap: '4px',
-                    minWidth: '180px'
+                    gap: '6px',
+                    minWidth: '200px',
+                    mt: 1
                   }}
                 >
                   {colorOptions.map((color) => (
@@ -669,19 +704,20 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
                         setShowColorPicker(null);
                       }}
                       sx={{
-                        width: '24px',
-                        height: '24px',
+                        width: '28px',
+                        height: '28px',
                         borderRadius: '50%',
                         backgroundColor: color.value || 'transparent',
-                        border: color.value ? '1px solid #ccc' : '1px dashed #ccc',
+                        border: color.value ? '2px solid #667eea' : '2px dashed #667eea',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        fontSize: '10px',
+                        fontSize: '12px',
+                        transition: 'all 0.2s ease',
                         '&:hover': {
-                          transform: 'scale(1.1)',
-                          boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                          transform: 'scale(1.2)',
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
                         }
                       }}
                       title={color.name}
@@ -700,8 +736,14 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
                 size="small"
                 onClick={() => setShowColorPicker(showColorPicker === 'text' ? null : 'text')}
                 sx={{
-                  backgroundColor: currentFormatting.textColor ? '#e3f2fd' : 'transparent',
-                  '&:hover': { backgroundColor: currentFormatting.textColor ? '#bbdefb' : '#f5f5f5' }
+                  backgroundColor: currentFormatting.textColor ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 255, 255, 0.1)',
+                  color: 'white',
+                  borderColor: 'rgba(255, 255, 255, 0.3)',
+                  '&:hover': { 
+                    backgroundColor: currentFormatting.textColor ? 'rgba(255, 255, 255, 0.4)' : 'rgba(255, 255, 255, 0.2)',
+                    transform: 'scale(1.05)'
+                  },
+                  transition: 'all 0.2s ease'
                 }}
               >
                 <FormatColorText />
@@ -714,14 +756,15 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
                     left: 0,
                     zIndex: 1000,
                     backgroundColor: 'white',
-                    border: '1px solid #ccc',
-                    borderRadius: '4px',
-                    padding: '8px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                    border: '2px solid #667eea',
+                    borderRadius: '8px',
+                    padding: '12px',
+                    boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3)',
                     display: 'grid',
                     gridTemplateColumns: 'repeat(6, 1fr)',
-                    gap: '4px',
-                    minWidth: '180px'
+                    gap: '6px',
+                    minWidth: '200px',
+                    mt: 1
                   }}
                 >
                   {colorOptions.map((color) => (
@@ -732,19 +775,20 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
                         setShowColorPicker(null);
                       }}
                       sx={{
-                        width: '24px',
-                        height: '24px',
+                        width: '28px',
+                        height: '28px',
                         borderRadius: '50%',
                         backgroundColor: color.value || 'transparent',
-                        border: color.value ? '1px solid #ccc' : '1px dashed #ccc',
+                        border: color.value ? '2px solid #667eea' : '2px dashed #667eea',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        fontSize: '10px',
+                        fontSize: '12px',
+                        transition: 'all 0.2s ease',
                         '&:hover': {
-                          transform: 'scale(1.1)',
-                          boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                          transform: 'scale(1.2)',
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
                         }
                       }}
                       title={color.name}
@@ -758,7 +802,7 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
           </Tooltip>
         </ButtonGroup>
         
-        <Divider orientation="vertical" flexItem />
+        <Divider orientation="vertical" flexItem sx={{ backgroundColor: 'rgba(255, 255, 255, 0.3)' }} />
         
         <ButtonGroup size="small" variant="outlined">
           <Tooltip title="ลดขนาดตัวอักษร">
@@ -771,6 +815,20 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
                   applyFormatting('fontSize', newSize);
                 }}
                 disabled={selectedCells.length === 0}
+                sx={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  color: 'white',
+                  borderColor: 'rgba(255, 255, 255, 0.3)',
+                  '&:hover': { 
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    transform: 'scale(1.05)'
+                  },
+                  '&:disabled': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    color: 'rgba(255, 255, 255, 0.5)'
+                  },
+                  transition: 'all 0.2s ease'
+                }}
               >
                 <Remove />
               </IconButton>
@@ -785,7 +843,10 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
               alignItems: 'center', 
               px: 1,
               minWidth: '30px',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              color: 'white',
+              fontWeight: 600,
+              textShadow: '0 1px 2px rgba(0,0,0,0.3)'
             }}
           >
             {currentFormatting.fontSize || 14}
@@ -801,6 +862,20 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
                   applyFormatting('fontSize', newSize);
                 }}
                 disabled={selectedCells.length === 0}
+                sx={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  color: 'white',
+                  borderColor: 'rgba(255, 255, 255, 0.3)',
+                  '&:hover': { 
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    transform: 'scale(1.05)'
+                  },
+                  '&:disabled': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    color: 'rgba(255, 255, 255, 0.5)'
+                  },
+                  transition: 'all 0.2s ease'
+                }}
               >
                 <Add />
               </IconButton>
@@ -808,34 +883,56 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
           </Tooltip>
         </ButtonGroup>
         
-        <Divider orientation="vertical" flexItem />
+        <Divider orientation="vertical" flexItem sx={{ backgroundColor: 'rgba(255, 255, 255, 0.3)' }} />
         
         <Tooltip title="ล้างการจัดรูปแบบ">
-          <IconButton size="small" onClick={clearFormatting}>
+          <IconButton 
+            size="small" 
+            onClick={clearFormatting}
+            sx={{
+              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              color: 'white',
+              borderColor: 'rgba(255, 255, 255, 0.3)',
+              '&:hover': { 
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                transform: 'scale(1.05)'
+              },
+              transition: 'all 0.2s ease'
+            }}
+          >
             <Clear />
           </IconButton>
         </Tooltip>
         
-        <Divider orientation="vertical" flexItem />
+        <Divider orientation="vertical" flexItem sx={{ backgroundColor: 'rgba(255, 255, 255, 0.3)' }} />
         
         <Tooltip title="รีเซ็ตตาราง (เคลียร์ทั้งหมด)">
           <IconButton 
             size="small" 
             onClick={resetTable}
             sx={{ 
-              color: 'error.main',
+              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              color: '#ff6b6b',
+              borderColor: 'rgba(255, 255, 255, 0.3)',
               '&:hover': { 
-                backgroundColor: 'error.light',
-                color: 'error.contrastText'
-              }
+                backgroundColor: 'rgba(255, 107, 107, 0.2)',
+                transform: 'scale(1.05)'
+              },
+              transition: 'all 0.2s ease'
             }}
           >
             <Refresh />
           </IconButton>
         </Tooltip>
         
-        <Typography variant="caption" sx={{ fontFamily: 'Kanit', color: 'text.secondary', ml: 'auto' }}>
-          {selectedCells.length > 0 ? `เลือก ${selectedCells.length} ช่อง` : 'คลิกช่องเพื่อแก้ไข หรือ Ctrl+คลิก เพื่อเลือกหลายช่อง'}
+        <Typography variant="caption" sx={{ 
+          fontFamily: 'Kanit', 
+          color: 'rgba(255, 255, 255, 0.9)', 
+          ml: 'auto',
+          fontWeight: 500,
+          textShadow: '0 1px 2px rgba(0,0,0,0.3)'
+        }}>
+          {selectedCells.length > 0 ? `✨ เลือก ${selectedCells.length} ช่อง` : '💡 คลิกช่องเพื่อแก้ไข หรือ Ctrl+คลิก เพื่อเลือกหลายช่อง'}
         </Typography>
       </Toolbar>
     );
@@ -1520,20 +1617,56 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
   );
 
   return (
-    <Box sx={{ width: '100%', overflow: 'hidden' }}>
+    <>
+      <Box sx={{ width: '100%', overflow: 'hidden' }}>
       {renderFormattingToolbar()}
       
       {/* Header with mobile navigation */}
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, flexWrap: 'wrap', gap: 1 }}>
-        <Typography variant="h6" sx={{ fontFamily: 'Kanit', flex: 1 }}>
-          ตารางเวรประจำเดือน {format(new Date(year, month - 1), 'MMMM yyyy', { locale: th })}
-        </Typography>
+      <Box sx={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'space-between', 
+        mb: 3, 
+        flexWrap: 'wrap', 
+        gap: 2,
+        background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+        borderRadius: 3,
+        p: 3,
+        boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+        border: '1px solid rgba(102, 126, 234, 0.1)'
+      }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1 }}>
+          <Box sx={{
+            width: 50,
+            height: 50,
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 4px 15px rgba(102, 126, 234, 0.3)',
+          }}>
+            📅
+          </Box>
+          <Typography variant="h5" sx={{ 
+            fontFamily: 'Kanit', 
+            flex: 1,
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            backgroundClip: 'text',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            fontWeight: 700,
+            textShadow: '0 2px 10px rgba(0,0,0,0.1)'
+          }}>
+            ตารางเวรประจำเดือน {format(new Date(year, month - 1), 'MMMM yyyy', { locale: th })}
+          </Typography>
+        </Box>
         
         {isMobile && (
           <Box sx={{ display: 'flex', gap: 1 }}>
             <Button
               size="small"
-              variant="outlined"
+              variant="contained"
               onClick={() => {
                 const container = document.querySelector('[data-testid="table-container"]') as HTMLElement;
                 if (container) {
@@ -1544,14 +1677,22 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
                 fontFamily: 'Kanit',
                 fontSize: '0.7rem',
                 minWidth: 'auto',
-                px: 1
+                px: 2,
+                py: 1,
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                boxShadow: '0 2px 8px rgba(102, 126, 234, 0.3)',
+                '&:hover': {
+                  transform: 'translateY(-1px)',
+                  boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)'
+                },
+                transition: 'all 0.2s ease'
               }}
             >
-              วันแรก
+              🏠 วันแรก
             </Button>
             <Button
               size="small"
-              variant="outlined"
+              variant="contained"
               onClick={() => {
                 const container = document.querySelector('[data-testid="table-container"]') as HTMLElement;
                 if (container) {
@@ -1567,14 +1708,22 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
                 fontFamily: 'Kanit',
                 fontSize: '0.7rem',
                 minWidth: 'auto',
-                px: 1
+                px: 2,
+                py: 1,
+                background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
+                boxShadow: '0 2px 8px rgba(40, 167, 69, 0.3)',
+                '&:hover': {
+                  transform: 'translateY(-1px)',
+                  boxShadow: '0 4px 12px rgba(40, 167, 69, 0.4)'
+                },
+                transition: 'all 0.2s ease'
               }}
             >
-              วันนี้
+              🎯 วันนี้
             </Button>
             <Button
               size="small"
-              variant="outlined"
+              variant="contained"
               onClick={() => {
                 const container = document.querySelector('[data-testid="table-container"]') as HTMLElement;
                 if (container) {
@@ -1585,10 +1734,18 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
                 fontFamily: 'Kanit',
                 fontSize: '0.7rem',
                 minWidth: 'auto',
-                px: 1
+                px: 2,
+                py: 1,
+                background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)',
+                boxShadow: '0 2px 8px rgba(255, 107, 107, 0.3)',
+                '&:hover': {
+                  transform: 'translateY(-1px)',
+                  boxShadow: '0 4px 12px rgba(255, 107, 107, 0.4)'
+                },
+                transition: 'all 0.2s ease'
               }}
             >
-              วันสุดท้าย
+              🏁 วันสุดท้าย
             </Button>
           </Box>
         )}
@@ -1603,6 +1760,9 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
               width: '100%',
               overflowX: 'auto',
               overflowY: 'auto',
+              borderRadius: 2,
+              boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+              border: '1px solid rgba(102, 126, 234, 0.1)',
               '& .MuiTable-root': {
                 minWidth: isMobile ? `${140 + (days.length * 45) + 165}px` : '100%',
                 tableLayout: 'fixed',
@@ -1621,7 +1781,7 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
           <TableHead>
             <TableRow>
               <TableCell sx={{ 
-                backgroundColor: '#f5f5f5', 
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 fontWeight: 'bold',
                 fontFamily: 'Kanit',
                 width: getNameColumnWidth(),
@@ -1630,10 +1790,13 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
                 zIndex: 3,
                 fontSize: isMobile ? '0.7rem' : '0.8rem',
                 padding: isMobile ? '4px 2px' : '8px 4px',
-                borderRight: '2px solid #e0e0e0',
+                borderRight: '2px solid rgba(255, 255, 255, 0.3)',
                 boxShadow: isMobile ? '2px 0 4px rgba(0,0,0,0.1)' : 'none',
+                color: 'white',
+                textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                borderBottom: '2px solid rgba(255, 255, 255, 0.2)'
               }}>
-                ชื่อเจ้าหน้าที่
+                👥 ชื่อเจ้าหน้าที่
               </TableCell>
               {days.map((day) => {
                 const holiday = isHoliday(day);
@@ -1644,25 +1807,46 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
                     key={day.toISOString()}
                     align="center"
                     sx={{
-                      backgroundColor: publicHoliday.isHoliday ? '#ffcdd2' : (holiday ? '#ffebee' : '#f5f5f5'),
+                      background: publicHoliday.isHoliday 
+                        ? 'linear-gradient(135deg, #ffcdd2 0%, #ef9a9a 100%)' 
+                        : (holiday 
+                          ? 'linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%)' 
+                          : 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)'),
                       fontWeight: 'bold',
                       fontFamily: 'Kanit',
                       width: getColumnWidth(),
                       fontSize: isMobile ? '0.5rem' : '0.65rem',
                       padding: isMobile ? '2px 1px' : '4px 2px',
-                      border: '1px solid #e0e0e0',
+                      border: '1px solid rgba(102, 126, 234, 0.2)',
+                      position: 'sticky',
+                      top: 0,
+                      zIndex: 2,
+                      '&::before': publicHoliday.isHoliday ? {
+                        content: '""',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.3) 50%, transparent 70%)',
+                        animation: 'shimmer 2s infinite',
+                        zIndex: 1
+                      } : {},
                     }}
                   >
-                    <Box>
+                    <Box sx={{ position: 'relative', zIndex: 2 }}>
                       <Typography variant="caption" display="block" sx={{ 
                         fontSize: isMobile ? '0.5rem' : '0.65rem',
-                        fontWeight: 'bold'
+                        fontWeight: 'bold',
+                        color: publicHoliday.isHoliday ? '#d32f2f' : (holiday ? '#d32f2f' : '#495057'),
+                        textShadow: publicHoliday.isHoliday ? '0 1px 2px rgba(0,0,0,0.1)' : 'none'
                       }}>
                         {format(day, 'd')}
                       </Typography>
                       <Typography variant="caption" display="block" sx={{ 
                         fontSize: isMobile ? '0.4rem' : '0.55rem',
-                        color: publicHoliday.isHoliday ? '#d32f2f' : (holiday ? '#d32f2f' : 'inherit')
+                        color: publicHoliday.isHoliday ? '#d32f2f' : (holiday ? '#d32f2f' : '#6c757d'),
+                        fontWeight: 500
                       }}>
                         {getDayName(day)}
                       </Typography>
@@ -2232,14 +2416,21 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
       {/* Mobile scroll indicator */}
       {isMobile && (
         <Box sx={{ 
-          mt: 1, 
-          p: 1, 
-          backgroundColor: '#f5f5f5', 
-          borderRadius: 1,
-          textAlign: 'center'
+          mt: 2, 
+          p: 2, 
+          background: 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)', 
+          borderRadius: 2,
+          textAlign: 'center',
+          border: '1px solid rgba(102, 126, 234, 0.2)',
+          boxShadow: '0 2px 12px rgba(102, 126, 234, 0.1)'
         }}>
-          <Typography variant="caption" sx={{ fontFamily: 'Kanit', color: '#666' }}>
-            คลิก/แตะช่องเพื่อแก้ไข • เลื่อนซ้าย-ขวาเพื่อดูวันอื่นๆ • ใช้ปุ่มด้านบนเพื่อไปยังวันที่ต้องการ
+          <Typography variant="caption" sx={{ 
+            fontFamily: 'Kanit', 
+            color: '#1565c0', 
+            fontWeight: 600,
+            fontSize: '0.8rem'
+          }}>
+            📱 คลิก/แตะช่องเพื่อแก้ไข • 🔄 เลื่อนซ้าย-ขวาเพื่อดูวันอื่นๆ • 🎯 ใช้ปุ่มด้านบนเพื่อไปยังวันที่ต้องการ
           </Typography>
         </Box>
       )}
@@ -2247,19 +2438,45 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
       {/* Desktop keyboard navigation guide */}
       {!isMobile && (
         <Box sx={{ 
-          mt: 1, 
-          p: 1, 
-          backgroundColor: '#e3f2fd', 
-          borderRadius: 1,
+          mt: 2, 
+          p: 2, 
+          background: 'linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%)', 
+          borderRadius: 2,
           textAlign: 'center',
-          border: '1px solid #bbdefb'
+          border: '1px solid rgba(156, 39, 176, 0.2)',
+          boxShadow: '0 2px 12px rgba(156, 39, 176, 0.1)'
         }}>
-          <Typography variant="caption" sx={{ fontFamily: 'Kanit', color: '#1565c0', fontWeight: 'bold' }}>
+          <Typography variant="caption" sx={{ 
+            fontFamily: 'Kanit', 
+            color: '#7b1fa2', 
+            fontWeight: 'bold',
+            fontSize: '0.8rem'
+          }}>
             💡 เคล็ดลับการใช้งาน: ใช้ลูกศร ↑↓←→ เพื่อเลื่อนระหว่างช่อง • กด Enter หรือ F2 เพื่อแก้ไข • พิมพ์ตัวอักษรเพื่อเริ่มแก้ไขทันที • Tab เพื่อเลื่อนไปช่องถัดไป
           </Typography>
         </Box>
       )}
     </Box>
+    
+    <style>
+      {`
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+        
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.7; }
+        }
+        
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}
+    </style>
+    </>
   );
 };
 
