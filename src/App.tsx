@@ -368,12 +368,14 @@ const App: React.FC = () => {
           );
         }
         
-        // ตรวจสอบว่าเป็นภาณุวัฒน์หรือไม่
-        const isPanuwat = currentStaffId === 'a1'; // a1 คือ ID ของภาณุวัฒน์
+        // ตรวจสอบว่าเป็นผู้ใช้ที่สามารถจัดตารางมอบหมายงานได้หรือไม่
+        const authorizedStaffIds = ['n2', 'n4', 'n3', 'n7', 'n5', 'n6']; // ศิรินทรา, โยธกา, หทัยชนก, สุวรรณา, ปาณิสรา, ขวัญเรือน
+        const isPanuwat = currentStaffId === 'a1'; // ภาณุวัฒน์
+        const canManageAssignments = isAdmin || authorizedStaffIds.includes(currentStaffId) || isPanuwat;
         
         return (
           <Box>
-            {isPanuwat && (
+            {canManageAssignments && (
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                 <h2 style={{ fontFamily: 'Kanit' }}>ตารางมอบหมายงานประจำวัน</h2>
                 <Box sx={{ display: 'flex', gap: 2 }}>
@@ -406,11 +408,12 @@ const App: React.FC = () => {
             <WorkAssignmentTable
               year={currentYear}
               month={currentMonth}
-              assignments={isPanuwat ? assignments : publishedAssignments}
-              onAssignmentChange={isPanuwat ? setAssignments : () => {}}
-              schedule={isPanuwat ? schedule : publishedSchedule}
-              isReadOnly={!isPanuwat}
+              assignments={canManageAssignments ? assignments : publishedAssignments}
+              onAssignmentChange={canManageAssignments ? setAssignments : () => {}}
+              schedule={canManageAssignments ? schedule : publishedSchedule}
+              isReadOnly={!canManageAssignments}
               currentStaffId={currentStaffId}
+              isPanuwat={isPanuwat} // ส่งข้อมูลว่าเป็นภาณุวัฒน์หรือไม่
             />
           </Box>
         );

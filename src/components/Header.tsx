@@ -59,6 +59,11 @@ const Header: React.FC<HeaderProps> = ({
 
   // เพิ่มปุ่มสำหรับเจ้าหน้าที่ทั่วไป (ไม่ใช่แอดมิน)
   if (isStaffLoggedIn && !isAdmin) {
+    // ตรวจสอบว่าเป็นผู้ใช้ที่สามารถจัดตารางมอบหมายงานได้หรือไม่
+    const authorizedStaffIds = ['n2', 'n4', 'n3', 'n7', 'n5', 'n6']; // ศิรินทรา, โยธกา, หทัยชนก, สุวรรณา, ปาณิสรา, ขวัญเรือน
+    const isPanuwat = currentStaffId === 'a1'; // ภาณุวัฒน์
+    const canManageAssignments = authorizedStaffIds.includes(currentStaffId) || isPanuwat;
+    
     menuItems.push(
       {
         key: 'schedule',
@@ -67,7 +72,7 @@ const Header: React.FC<HeaderProps> = ({
       },
       {
         key: 'assignments',
-        label: 'ตารางมอบหมายงานประจำวัน',
+        label: canManageAssignments ? 'จัดตารางมอบหมายงาน' : 'ตารางมอบหมายงานประจำวัน',
         icon: <Assignment />,
       },
       {
