@@ -947,280 +947,394 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
       ) : (
         // Desktop View: Table Layout - สวยแบบตะโกน
         <Fade in timeout={1400}>
-          <TableContainer component={Paper} sx={{
-            borderRadius: '20px',
-            boxShadow: '0 15px 35px rgba(0,0,0,0.1)',
-            border: '2px solid rgba(0,0,0,0.05)',
-            overflow: 'hidden'
-          }}>
-            <Table>
-              <TableHead>
-                <TableRow sx={{
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-                }}>
-                  <TableCell sx={{ 
-                    fontFamily: 'Kanit', 
-                    fontWeight: 'bold',
-                    color: 'white',
-                    fontSize: '16px',
-                    borderBottom: 'none'
-                  }}>
-                    เวร
-                  </TableCell>
-                  <TableCell sx={{ 
-                    fontFamily: 'Kanit', 
-                    fontWeight: 'bold',
-                    color: 'white',
-                    fontSize: '16px',
-                    borderBottom: 'none'
-                  }}>
-                    เจ้าหน้าที่
-                  </TableCell>
-                  <TableCell sx={{ 
-                    fontFamily: 'Kanit', 
-                    fontWeight: 'bold',
-                    color: 'white',
-                    fontSize: '16px',
-                    borderBottom: 'none'
-                  }}>
-                    รายละเอียด
-                  </TableCell>
-                  {!isReadOnly && (
-                    <TableCell sx={{ 
-                      fontFamily: 'Kanit', 
-                      fontWeight: 'bold',
-                      color: 'white',
-                      fontSize: '16px',
-                      borderBottom: 'none'
+          <Box>
+            {selectedDateAssignments.length === 0 ? (
+              <TableContainer component={Paper} sx={{
+                borderRadius: '20px',
+                boxShadow: '0 15px 35px rgba(0,0,0,0.1)',
+                border: '2px solid rgba(0,0,0,0.05)',
+                overflow: 'hidden'
+              }}>
+                <Table>
+                  <TableHead>
+                    <TableRow sx={{
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
                     }}>
-                      การจัดการ
-                    </TableCell>
-                  )}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {selectedDateAssignments.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={isReadOnly ? 3 : 4} align="center" sx={{ 
-                      fontFamily: 'Kanit',
-                      fontSize: '18px',
-                      color: '#666',
-                      py: 4
-                    }}>
-                      <Box sx={{ 
-                        display: 'flex', 
-                        flexDirection: 'column', 
-                        alignItems: 'center', 
-                        gap: 2 
+                      <TableCell sx={{ 
+                        fontFamily: 'Kanit', 
+                        fontWeight: 'bold',
+                        color: 'white',
+                        fontSize: '16px',
+                        borderBottom: 'none'
                       }}>
-                        <AssignmentIcon sx={{ 
-                          fontSize: 48, 
-                          color: '#ccc',
-                          animation: 'float 3s ease-in-out infinite'
-                        }} />
-                        ไม่มีงานที่มอบหมายในวันที่ {formatDate(getSelectedDateString())}
-                      </Box>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  selectedDateAssignments.map((assignment, index) => {
-                    const staff = allStaff.find(s => s.id === assignment.nurseId);
-                    const shiftName = SHIFTS.find(s => s.id === assignment.shift)?.name || '';
-                    
-                    return (
-                      <Grow in timeout={500 + index * 100} key={assignment.id}>
-                        <TableRow sx={{
-                          '&:hover': {
-                            backgroundColor: 'rgba(102, 126, 234, 0.05)',
-                            transform: 'scale(1.01)',
-                            transition: 'all 0.3s ease'
-                          }
+                        เวร
+                      </TableCell>
+                      <TableCell sx={{ 
+                        fontFamily: 'Kanit', 
+                        fontWeight: 'bold',
+                        color: 'white',
+                        fontSize: '16px',
+                        borderBottom: 'none'
+                      }}>
+                        เจ้าหน้าที่
+                      </TableCell>
+                      <TableCell sx={{ 
+                        fontFamily: 'Kanit', 
+                        fontWeight: 'bold',
+                        color: 'white',
+                        fontSize: '16px',
+                        borderBottom: 'none'
+                      }}>
+                        รายละเอียด
+                      </TableCell>
+                      {!isReadOnly && (
+                        <TableCell sx={{ 
+                          fontFamily: 'Kanit', 
+                          fontWeight: 'bold',
+                          color: 'white',
+                          fontSize: '16px',
+                          borderBottom: 'none'
                         }}>
-                          <TableCell sx={{ 
-                            fontFamily: 'Kanit',
-                            fontWeight: 'bold',
-                            fontSize: '16px'
-                          }}>
-                            <Chip 
-                              label={shiftName} 
-                              sx={{
-                                background: 'linear-gradient(135deg, #667eea, #764ba2)',
-                                color: 'white',
+                          การจัดการ
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell colSpan={isReadOnly ? 3 : 4} align="center" sx={{ 
+                        fontFamily: 'Kanit',
+                        fontSize: '18px',
+                        color: '#666',
+                        py: 4
+                      }}>
+                        <Box sx={{ 
+                          display: 'flex', 
+                          flexDirection: 'column', 
+                          alignItems: 'center', 
+                          gap: 2 
+                        }}>
+                          <AssignmentIcon sx={{ 
+                            fontSize: 48, 
+                            color: '#ccc',
+                            animation: 'float 3s ease-in-out infinite'
+                          }} />
+                          ไม่มีงานที่มอบหมายในวันที่ {formatDate(getSelectedDateString())}
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            ) : (
+              // จัดกลุ่มตามเวรและแสดงแยกกัน
+              (() => {
+                const assignmentsByShift = selectedDateAssignments.reduce((acc, assignment) => {
+                  const shiftId = assignment.shift || 'unknown';
+                  if (!acc[shiftId]) {
+                    acc[shiftId] = [];
+                  }
+                  acc[shiftId].push(assignment);
+                  return acc;
+                }, {} as { [key: string]: WorkAssignment[] });
+
+                return Object.entries(assignmentsByShift).map(([shiftId, shiftAssignments]) => {
+                  const shift = SHIFTS.find(s => s.id === shiftId);
+                  const shiftName = shift?.name || shiftId;
+                  const shiftColor = shiftId === 'morning' ? '#4CAF50' : shiftId === 'afternoon' ? '#FF9800' : '#9C27B0';
+                  const shiftBgColor = shiftId === 'morning' ? 'rgba(76, 175, 80, 0.1)' : shiftId === 'afternoon' ? 'rgba(255, 152, 0, 0.1)' : 'rgba(156, 39, 176, 0.1)';
+                  
+                  return (
+                    <Box key={shiftId} sx={{ mb: 3 }}>
+                      {/* หัวข้อเวร */}
+                      <Box sx={{
+                        background: `linear-gradient(135deg, ${shiftColor}, ${shiftColor}dd)`,
+                        color: 'white',
+                        p: 2,
+                        borderRadius: '15px 15px 0 0',
+                        mb: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 2,
+                        boxShadow: `0 4px 15px ${shiftColor}40`
+                      }}>
+                        <Box sx={{
+                          width: 12,
+                          height: 12,
+                          borderRadius: '50%',
+                          backgroundColor: 'white',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                        }} />
+                        <Typography variant="h6" sx={{ 
+                          fontFamily: 'Kanit', 
+                          fontWeight: 'bold',
+                          fontSize: '18px'
+                        }}>
+                          เวร{shiftName} ({shiftAssignments.length} คน)
+                        </Typography>
+                      </Box>
+
+                      {/* ตารางสำหรับเวรนี้ */}
+                      <TableContainer component={Paper} sx={{
+                        borderRadius: '0 0 20px 20px',
+                        boxShadow: '0 15px 35px rgba(0,0,0,0.1)',
+                        border: '2px solid rgba(0,0,0,0.05)',
+                        borderTop: 'none',
+                        overflow: 'hidden',
+                        backgroundColor: shiftBgColor
+                      }}>
+                        <Table>
+                          <TableHead>
+                            <TableRow sx={{
+                              background: `linear-gradient(135deg, ${shiftColor}dd, ${shiftColor}bb)`
+                            }}>
+                              <TableCell sx={{ 
+                                fontFamily: 'Kanit', 
                                 fontWeight: 'bold',
-                                fontSize: '14px',
-                                padding: '8px 16px'
-                              }}
-                            />
-                          </TableCell>
-                          <TableCell sx={{ 
-                            fontFamily: 'Kanit',
-                            fontSize: '16px'
-                          }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <PersonIcon sx={{ color: '#667eea' }} />
-                              {getNurseName(assignment.nurseId)} 
-                              <Chip 
-                                label={staff?.type === 'nurse' ? 'พยาบาล' : 'ผู้ช่วย'} 
-                                size="small" 
-                                variant="outlined"
-                                sx={{ 
-                                  borderColor: staff?.type === 'nurse' ? '#4caf50' : '#ff9800',
-                                  color: staff?.type === 'nurse' ? '#4caf50' : '#ff9800',
-                                  fontWeight: 'bold'
-                                }}
-                              />
-                            </Box>
-                          </TableCell>
-                          <TableCell sx={{ fontFamily: 'Kanit' }}>
-                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                              {/* เตียงที่ดูแล */}
-                              {assignment.bedArea && (
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                  <Typography variant="body2" sx={{ 
-                                    fontFamily: 'Kanit',
-                                    fontWeight: 'bold',
-                                    color: '#667eea'
-                                  }}>
-                                    เตียง:
-                                  </Typography>
-                                  <Chip 
-                                    label={assignment.bedArea} 
-                                    size="small" 
-                                    variant="outlined"
-                                    sx={{ 
-                                      borderColor: '#667eea',
-                                      color: '#667eea',
-                                      fontWeight: 'bold'
-                                    }}
-                                  />
-                                </Box>
+                                color: 'white',
+                                fontSize: '16px',
+                                borderBottom: 'none'
+                              }}>
+                                เวร
+                              </TableCell>
+                              <TableCell sx={{ 
+                                fontFamily: 'Kanit', 
+                                fontWeight: 'bold',
+                                color: 'white',
+                                fontSize: '16px',
+                                borderBottom: 'none'
+                              }}>
+                                เจ้าหน้าที่
+                              </TableCell>
+                              <TableCell sx={{ 
+                                fontFamily: 'Kanit', 
+                                fontWeight: 'bold',
+                                color: 'white',
+                                fontSize: '16px',
+                                borderBottom: 'none'
+                              }}>
+                                รายละเอียด
+                              </TableCell>
+                              {!isReadOnly && (
+                                <TableCell sx={{ 
+                                  fontFamily: 'Kanit', 
+                                  fontWeight: 'bold',
+                                  color: 'white',
+                                  fontSize: '16px',
+                                  borderBottom: 'none'
+                                }}>
+                                  การจัดการ
+                                </TableCell>
                               )}
-                              {/* หน้าที่ */}
-                              {assignment.duties && assignment.duties.length > 0 && (
-                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                                  {assignment.duties.map((duty) => (
-                                    <Chip 
-                                      key={duty} 
-                                      label={duty} 
-                                      size="small" 
-                                      variant="outlined"
-                                      sx={{ 
-                                        borderColor: '#4caf50',
-                                        color: '#4caf50',
-                                        fontWeight: 'bold'
-                                      }}
-                                    />
-                                  ))}
-                                </Box>
-                              )}
-                              {/* ดูแลยาเสพติด */}
-                              {assignment.drugSupervision && (
-                                <Chip 
-                                  label="ดูแลยาเสพติด" 
-                                  size="small" 
-                                  color="warning"
-                                  sx={{ fontWeight: 'bold' }}
-                                />
-                              )}
-                              {/* ERT */}
-                              {assignment.ert && (
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                  <Typography variant="body2" sx={{ 
-                                    fontFamily: 'Kanit',
-                                    fontWeight: 'bold',
-                                    color: '#ff9800'
-                                  }}>
-                                    ERT:
-                                  </Typography>
-                                  <Chip 
-                                    label={assignment.ert} 
-                                    size="small" 
-                                    variant="outlined"
-                                    sx={{ 
-                                      borderColor: '#ff9800',
-                                      color: '#ff9800',
-                                      fontWeight: 'bold'
-                                    }}
-                                  />
-                                </Box>
-                              )}
-                              {/* ทีม */}
-                              {assignment.team && (
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                  <Typography variant="body2" sx={{ 
-                                    fontFamily: 'Kanit',
-                                    fontWeight: 'bold',
-                                    color: '#9c27b0'
-                                  }}>
-                                    ทีม:
-                                  </Typography>
-                                  <Chip 
-                                    label={assignment.team} 
-                                    size="small" 
-                                    variant="outlined"
-                                    sx={{ 
-                                      borderColor: '#9c27b0',
-                                      color: '#9c27b0',
-                                      fontWeight: 'bold'
-                                    }}
-                                  />
-                                </Box>
-                              )}
-                            </Box>
-                          </TableCell>
-                          {!isReadOnly && (
-                            <TableCell>
-                              <Box sx={{ display: 'flex', gap: 1 }}>
-                                <Button
-                                  size="small"
-                                  variant="outlined"
-                                  startIcon={<EditIcon />}
-                                  onClick={() => handleEditAssignment(assignment)}
-                                  sx={{ 
-                                    fontFamily: 'Kanit',
-                                    fontWeight: 'bold',
-                                    borderColor: '#2196f3',
-                                    color: '#2196f3',
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {shiftAssignments.map((assignment, index) => {
+                              const staff = allStaff.find(s => s.id === assignment.nurseId);
+                              
+                              return (
+                                <Grow in timeout={500 + index * 100} key={assignment.id}>
+                                  <TableRow sx={{
                                     '&:hover': {
-                                      backgroundColor: '#2196f3',
-                                      color: 'white',
-                                      transform: 'translateY(-2px)',
-                                      boxShadow: '0 4px 15px rgba(33, 150, 243, 0.3)'
+                                      backgroundColor: `${shiftColor}08`,
+                                      transform: 'scale(1.01)',
+                                      transition: 'all 0.3s ease'
                                     },
-                                    transition: 'all 0.3s ease'
-                                  }}
-                                >
-                                  แก้ไข
-                                </Button>
-                                <Button
-                                  size="small"
-                                  variant="outlined"
-                                  startIcon={<DeleteIcon />}
-                                  color="error"
-                                  onClick={() => handleDeleteAssignment(assignment.id)}
-                                  sx={{ 
-                                    fontFamily: 'Kanit',
-                                    fontWeight: 'bold',
-                                    '&:hover': {
-                                      transform: 'translateY(-2px)',
-                                      boxShadow: '0 4px 15px rgba(244, 67, 54, 0.3)'
-                                    },
-                                    transition: 'all 0.3s ease'
-                                  }}
-                                >
-                                  ลบ
-                                </Button>
-                              </Box>
-                            </TableCell>
-                          )}
-                        </TableRow>
-                      </Grow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                                    '&:nth-of-type(even)': {
+                                      backgroundColor: `${shiftColor}05`
+                                    }
+                                  }}>
+                                    <TableCell sx={{ 
+                                      fontFamily: 'Kanit',
+                                      fontWeight: 'bold',
+                                      fontSize: '16px'
+                                    }}>
+                                      <Chip 
+                                        label={shiftName} 
+                                        sx={{
+                                          background: `linear-gradient(135deg, ${shiftColor}, ${shiftColor}dd)`,
+                                          color: 'white',
+                                          fontWeight: 'bold',
+                                          fontSize: '14px',
+                                          padding: '8px 16px',
+                                          border: `2px solid ${shiftColor}`
+                                        }}
+                                      />
+                                    </TableCell>
+                                    <TableCell sx={{ 
+                                      fontFamily: 'Kanit',
+                                      fontSize: '16px'
+                                    }}>
+                                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <PersonIcon sx={{ color: shiftColor }} />
+                                        {getNurseName(assignment.nurseId)} 
+                                        <Chip 
+                                          label={staff?.type === 'nurse' ? 'พยาบาล' : 'ผู้ช่วย'} 
+                                          size="small" 
+                                          variant="outlined"
+                                          sx={{ 
+                                            borderColor: staff?.type === 'nurse' ? '#4caf50' : '#ff9800',
+                                            color: staff?.type === 'nurse' ? '#4caf50' : '#ff9800',
+                                            fontWeight: 'bold'
+                                          }}
+                                        />
+                                      </Box>
+                                    </TableCell>
+                                    <TableCell sx={{ fontFamily: 'Kanit' }}>
+                                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                        {/* เตียงที่ดูแล */}
+                                        {assignment.bedArea && (
+                                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <Typography variant="body2" sx={{ 
+                                              fontFamily: 'Kanit',
+                                              fontWeight: 'bold',
+                                              color: shiftColor
+                                            }}>
+                                              เตียง:
+                                            </Typography>
+                                            <Chip 
+                                              label={assignment.bedArea} 
+                                              size="small" 
+                                              variant="outlined"
+                                              sx={{ 
+                                                borderColor: shiftColor,
+                                                color: shiftColor,
+                                                fontWeight: 'bold'
+                                              }}
+                                            />
+                                          </Box>
+                                        )}
+                                        {/* หน้าที่ */}
+                                        {assignment.duties && assignment.duties.length > 0 && (
+                                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                            {assignment.duties.map((duty) => (
+                                              <Chip 
+                                                key={duty} 
+                                                label={duty} 
+                                                size="small" 
+                                                variant="outlined"
+                                                sx={{ 
+                                                  borderColor: '#4caf50',
+                                                  color: '#4caf50',
+                                                  fontWeight: 'bold'
+                                                }}
+                                              />
+                                            ))}
+                                          </Box>
+                                        )}
+                                        {/* ดูแลยาเสพติด */}
+                                        {assignment.drugSupervision && (
+                                          <Chip 
+                                            label="ดูแลยาเสพติด" 
+                                            size="small" 
+                                            color="warning"
+                                            sx={{ fontWeight: 'bold' }}
+                                          />
+                                        )}
+                                        {/* ERT */}
+                                        {assignment.ert && (
+                                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <Typography variant="body2" sx={{ 
+                                              fontFamily: 'Kanit',
+                                              fontWeight: 'bold',
+                                              color: '#ff9800'
+                                            }}>
+                                              ERT:
+                                            </Typography>
+                                            <Chip 
+                                              label={assignment.ert} 
+                                              size="small" 
+                                              variant="outlined"
+                                              sx={{ 
+                                                borderColor: '#ff9800',
+                                                color: '#ff9800',
+                                                fontWeight: 'bold'
+                                              }}
+                                            />
+                                          </Box>
+                                        )}
+                                        {/* ทีม */}
+                                        {assignment.team && (
+                                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <Typography variant="body2" sx={{ 
+                                              fontFamily: 'Kanit',
+                                              fontWeight: 'bold',
+                                              color: '#9c27b0'
+                                            }}>
+                                              ทีม:
+                                            </Typography>
+                                            <Chip 
+                                              label={assignment.team} 
+                                              size="small" 
+                                              variant="outlined"
+                                              sx={{ 
+                                                borderColor: '#9c27b0',
+                                                color: '#9c27b0',
+                                                fontWeight: 'bold'
+                                              }}
+                                            />
+                                          </Box>
+                                        )}
+                                      </Box>
+                                    </TableCell>
+                                    {!isReadOnly && (
+                                      <TableCell>
+                                        <Box sx={{ display: 'flex', gap: 1 }}>
+                                          <Button
+                                            size="small"
+                                            variant="outlined"
+                                            startIcon={<EditIcon />}
+                                            onClick={() => handleEditAssignment(assignment)}
+                                            sx={{ 
+                                              fontFamily: 'Kanit',
+                                              fontWeight: 'bold',
+                                              borderColor: '#2196f3',
+                                              color: '#2196f3',
+                                              '&:hover': {
+                                                backgroundColor: '#2196f3',
+                                                color: 'white',
+                                                transform: 'translateY(-2px)',
+                                                boxShadow: '0 4px 15px rgba(33, 150, 243, 0.3)'
+                                              },
+                                              transition: 'all 0.3s ease'
+                                            }}
+                                          >
+                                            แก้ไข
+                                          </Button>
+                                          <Button
+                                            size="small"
+                                            variant="outlined"
+                                            startIcon={<DeleteIcon />}
+                                            color="error"
+                                            onClick={() => handleDeleteAssignment(assignment.id)}
+                                            sx={{ 
+                                              fontFamily: 'Kanit',
+                                              fontWeight: 'bold',
+                                              '&:hover': {
+                                                transform: 'translateY(-2px)',
+                                                boxShadow: '0 4px 15px rgba(244, 67, 54, 0.3)'
+                                              },
+                                              transition: 'all 0.3s ease'
+                                            }}
+                                          >
+                                            ลบ
+                                          </Button>
+                                        </Box>
+                                      </TableCell>
+                                    )}
+                                  </TableRow>
+                                </Grow>
+                              );
+                            })}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    </Box>
+                  );
+                });
+              })()
+            )}
+          </Box>
         </Fade>
       )}
 
