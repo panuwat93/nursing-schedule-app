@@ -78,4 +78,29 @@ export const getStaffAccount = async (staffId: string): Promise<StaffAccount | n
 export const checkStaffAccountExists = async (staffId: string): Promise<boolean> => {
   const account = await getStaffAccount(staffId);
   return account !== null;
+};
+
+// เปลี่ยนรหัสผ่าน
+export const changePassword = async (staffId: string, currentPassword: string, newPassword: string): Promise<boolean> => {
+  try {
+    const account = await getStaffAccount(staffId);
+    if (!account) {
+      return false; // ไม่มีบัญชี
+    }
+
+    if (account.password !== currentPassword) {
+      return false; // รหัสผ่านปัจจุบันไม่ถูกต้อง
+    }
+
+    // อัปเดตรหัสผ่านใหม่
+    await setDoc(doc(db, 'staffAccounts', staffId), {
+      ...account,
+      password: newPassword,
+    }, { merge: true });
+
+    return true;
+  } catch (error) {
+    console.error('Error changing password:', error);
+    return false;
+  }
 }; 

@@ -24,9 +24,11 @@ import {
   Logout,
   Favorite,
   Menu as MenuIcon,
-  Close as CloseIcon
+  Close as CloseIcon,
+  Lock as LockIcon
 } from '@mui/icons-material';
 import { nurses, assistants } from '../data/nurses';
+import ChangePassword from './ChangePassword';
 
 interface HeaderProps {
   currentPage: string;
@@ -46,6 +48,7 @@ const Header: React.FC<HeaderProps> = ({
   onLogout
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
@@ -153,6 +156,16 @@ const Header: React.FC<HeaderProps> = ({
                 >
                   {isAdmin ? 'แอดมิน' : `เจ้าหน้าที่: ${getStaffName(currentStaffId)}`}
                 </Typography>
+                {!isAdmin && isStaffLoggedIn && !isMobile && (
+                  <Button
+                    color="inherit"
+                    startIcon={<LockIcon />}
+                    onClick={() => setChangePasswordOpen(true)}
+                    sx={{ fontFamily: 'Kanit', fontSize: '0.8rem', mr: 1 }}
+                  >
+                    เปลี่ยนรหัสผ่าน
+                  </Button>
+                )}
                 {onLogout && !isMobile && (
                   <Button
                     color="inherit"
@@ -250,6 +263,38 @@ const Header: React.FC<HeaderProps> = ({
             </>
           )}
 
+          {/* ปุ่มเปลี่ยนรหัสผ่านสำหรับเจ้าหน้าที่ทั่วไป */}
+          {!isAdmin && isStaffLoggedIn && (
+            <>
+              <List>
+                <ListItem
+                  onClick={() => {
+                    setChangePasswordOpen(true);
+                    handleMobileMenuClose();
+                  }}
+                  sx={{
+                    cursor: 'pointer',
+                    '&:hover': {
+                      backgroundColor: '#e8f5e8',
+                    },
+                  }}
+                >
+                  <ListItemIcon sx={{ color: '#4caf50' }}>
+                    <LockIcon />
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary="เปลี่ยนรหัสผ่าน"
+                    primaryTypographyProps={{
+                      fontFamily: 'Kanit',
+                      color: '#4caf50',
+                    }}
+                  />
+                </ListItem>
+              </List>
+              <Divider />
+            </>
+          )}
+
           {/* Menu Items */}
           <List>
             {menuItems.map((item) => (
@@ -312,6 +357,15 @@ const Header: React.FC<HeaderProps> = ({
           )}
         </Box>
       </Drawer>
+
+      {/* Dialog เปลี่ยนรหัสผ่าน */}
+      {!isAdmin && isStaffLoggedIn && (
+        <ChangePassword
+          staffId={currentStaffId}
+          open={changePasswordOpen}
+          onClose={() => setChangePasswordOpen(false)}
+        />
+      )}
     </>
   );
 };
