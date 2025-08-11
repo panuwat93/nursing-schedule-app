@@ -174,44 +174,50 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
     setSelectedAssignment(null);
     setEditingAssignment({ date: getSelectedDateString() });
     setIsDialogOpen(true);
+    // เริ่มต้นข้อมูลสำหรับทุกคนในทุกเวร
+    initializeShiftAssignments(getSelectedDateString());
   };
 
   const handleEditAssignment = (assignment: WorkAssignment) => {
     setSelectedAssignment(assignment);
     setEditingAssignment(assignment);
     setIsDialogOpen(true);
+    // เริ่มต้นข้อมูลสำหรับทุกคนในทุกเวร
+    initializeShiftAssignments(assignment.date);
   };
 
   const handleSaveAssignment = () => {
-    if (!editingAssignment.date || !editingAssignment.shift) {
+    if (!editingAssignment.date) {
       return;
     }
 
     let newAssignments = [...assignments];
     
-    // ลบข้อมูลเก่าของเวรและวันที่นี้ก่อน
-    newAssignments = newAssignments.filter(a => 
-      !(a.date === editingAssignment.date && a.shift === editingAssignment.shift)
-    );
+    // ลบข้อมูลเก่าของวันที่นี้ก่อน
+    newAssignments = newAssignments.filter(a => a.date !== editingAssignment.date);
 
-    // เพิ่มข้อมูลใหม่สำหรับทุกคนในเวร
-    Object.values(shiftAssignments).forEach(staffAssignment => {
-      if (staffAssignment.nurseId) {
-        const newAssignment: WorkAssignment = {
-          id: Date.now().toString() + Math.random().toString(),
-          date: staffAssignment.date!,
-          shift: staffAssignment.shift!,
-          nurseId: staffAssignment.nurseId!,
-          bedArea: staffAssignment.bedArea,
-          duties: staffAssignment.duties,
-          drugSupervision: staffAssignment.drugSupervision,
-          ert: staffAssignment.ert,
-          team: staffAssignment.team,
-          assignment: '', // เซ็ตเป็นค่าว่าง
-          notes: '',
-        };
-        newAssignments.push(newAssignment);
-      }
+    // เพิ่มข้อมูลใหม่สำหรับทุกคนในทุกเวร
+    SHIFTS.forEach(shift => {
+      const staffInShift = getStaffByShift(shift.id, editingAssignment.date || '');
+      staffInShift.forEach(staff => {
+        const staffAssignment = shiftAssignments[`${staff.id}_${shift.id}`] || {};
+        if (staffAssignment.nurseId) {
+          const newAssignment: WorkAssignment = {
+            id: Date.now().toString() + Math.random().toString(),
+            date: staffAssignment.date!,
+            shift: shift.id,
+            nurseId: staffAssignment.nurseId!,
+            bedArea: staffAssignment.bedArea,
+            duties: staffAssignment.duties,
+            drugSupervision: staffAssignment.drugSupervision,
+            ert: staffAssignment.ert,
+            team: staffAssignment.team,
+            assignment: '', // เซ็ตเป็นค่าว่าง
+            notes: '',
+          };
+          newAssignments.push(newAssignment);
+        }
+      });
     });
 
     onAssignmentChange(newAssignments);
@@ -322,37 +328,41 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
     return format(new Date(dateStr), 'd MMMM yyyy', { locale: th });
   };
 
-  // เริ่มต้นข้อมูลสำหรับทุกคนในเวร
-  const initializeShiftAssignments = (shift: string, date: string) => {
-    const staffInShift = getStaffByShift(shift, date);
+  // เริ่มต้นข้อมูลสำหรับทุกคนในทุกเวร
+  const initializeShiftAssignments = (date: string) => {
     const initialAssignments: { [staffId: string]: Partial<WorkAssignment> } = {};
     
-    staffInShift.forEach(staff => {
-      // ตรวจสอบว่ามีข้อมูลเดิมอยู่แล้วหรือไม่
-      const existingAssignment = assignments.find(a => 
-        a.nurseId === staff.id && a.date === date && a.shift === shift
-      );
-      
-      initialAssignments[staff.id] = existingAssignment || {
-        date,
-        shift,
-        nurseId: staff.id,
-        bedArea: '',
-        duties: [],
-        drugSupervision: false,
-        ert: '',
-        team: '',
-        assignment: '',
-        notes: ''
-      };
+    SHIFTS.forEach(shift => {
+      const staffInShift = getStaffByShift(shift.id, date);
+      staffInShift.forEach(staff => {
+        const key = `${staff.id}_${shift.id}`;
+        // ตรวจสอบว่ามีข้อมูลเดิมอยู่แล้วหรือไม่
+        const existingAssignment = assignments.find(a => 
+          a.nurseId === staff.id && a.date === date && a.shift === shift.id
+        );
+        
+        initialAssignments[key] = existingAssignment || {
+          date,
+          shift: shift.id,
+          nurseId: staff.id,
+          bedArea: '',
+          duties: [],
+          drugSupervision: false,
+          ert: '',
+          team: '',
+          assignment: '',
+          notes: ''
+        };
+      });
     });
     
     setShiftAssignments(initialAssignments);
   };
 
   // ดึงข้อมูลมอบหมายของเจ้าหน้าที่
-  const getStaffAssignment = (staffId: string, field: keyof WorkAssignment) => {
-    const assignment = shiftAssignments[staffId];
+  const getStaffAssignment = (staffId: string, field: keyof WorkAssignment, shiftId?: string) => {
+    const key = shiftId ? `${staffId}_${shiftId}` : staffId;
+    const assignment = shiftAssignments[key];
     if (!assignment) return field === 'duties' ? [] : field === 'drugSupervision' ? false : '';
     
     const value = assignment[field];
@@ -362,11 +372,12 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
   };
 
   // อัปเดตข้อมูลมอบหมายของเจ้าหน้าที่
-  const updateStaffAssignment = (staffId: string, field: string, value: any) => {
+  const updateStaffAssignment = (staffId: string, field: string, value: any, shiftId?: string) => {
+    const key = shiftId ? `${staffId}_${shiftId}` : staffId;
     setShiftAssignments(prev => ({
       ...prev,
-      [staffId]: {
-        ...prev[staffId],
+      [key]: {
+        ...prev[key],
         [field]: value
       }
     }));
@@ -1245,7 +1256,14 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
               label="วันที่"
               type="date"
               value={editingAssignment.date || getSelectedDateString()}
-              onChange={(e) => setEditingAssignment({ ...editingAssignment, date: e.target.value })}
+              onChange={(e) => {
+                const newDate = e.target.value;
+                setEditingAssignment({ ...editingAssignment, date: newDate });
+                // เริ่มต้นข้อมูลสำหรับทุกคนในทุกเวรเมื่อเปลี่ยนวันที่
+                if (newDate) {
+                  initializeShiftAssignments(newDate);
+                }
+              }}
               InputLabelProps={{ sx: { fontFamily: 'Kanit', fontWeight: 'bold' } }}
               sx={{ 
                 fontFamily: 'Kanit',
@@ -1263,8 +1281,8 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
               }}
             />
             
-            {/* 2. เวร */}
-            <FormControl fullWidth>
+            {/* 2. เวร - ลบออกเพราะไม่ต้องเลือกเวรแล้ว */}
+            {/* <FormControl fullWidth>
               <InputLabel sx={{ fontFamily: 'Kanit', fontWeight: 'bold' }}>เวร</InputLabel>
               <Select
                 value={editingAssignment.shift || ''}
@@ -1277,7 +1295,7 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
                     nurseId: '' 
                   });
                   // เริ่มต้นข้อมูลสำหรับทุกคนในเวร
-                  initializeShiftAssignments(selectedShift, editingAssignment.date || getSelectedDateString());
+                  initializeShiftAssignments(editingAssignment.date || getSelectedDateString());
                 }}
                 sx={{ 
                   fontFamily: 'Kanit',
@@ -1300,10 +1318,10 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
                   </MenuItem>
                 ))}
               </Select>
-            </FormControl>
+            </FormControl> */}
 
-            {/* 3. ตารางมอบหมายงานสำหรับทุกคนในเวร */}
-            {editingAssignment.shift && editingAssignment.date && (
+            {/* 3. ตารางมอบหมายงานสำหรับทุกคนในวันนั้น */}
+            {editingAssignment.date && (
               <Box sx={{ mt: 2 }}>
                 <Typography variant="h6" sx={{ 
                   fontFamily: 'Kanit', 
@@ -1311,7 +1329,7 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
                   fontWeight: 'bold',
                   color: '#667eea'
                 }}>
-                  มอบหมายงานสำหรับเวร{SHIFTS.find(s => s.id === editingAssignment.shift)?.name}
+                  มอบหมายงานสำหรับวันที่ {formatDate(editingAssignment.date)}
                 </Typography>
                 
                 {/* แสดงข้อความแจ้งเตือนสำหรับภาณุวัฒน์ */}
@@ -1336,7 +1354,7 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
                       color: '#856404',
                       mt: 1
                     }}>
-                      📋 สำหรับผู้ช่วยและพาร์ทไทม์: จะมีแค่ <strong>หน้าที่ ERT</strong> และ <strong>ทีม A/B</strong> เท่านั้น
+                      📋 สำหรับผู้ช่วยและพาร์ทไทม์: จะมีแค่ <strong>หน้าที่ ERT</strong> และ <strong>ทีม</strong> เท่านั้น
                     </Typography>
                   </Box>
                 )}
@@ -1368,270 +1386,321 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
                   </Box>
                 )}
                 
-                <TableContainer component={Paper} sx={{ 
-                  maxHeight: 400,
-                  borderRadius: '15px',
-                  boxShadow: '0 8px 25px rgba(0,0,0,0.1)',
-                  border: '2px solid rgba(0,0,0,0.05)'
-                }}>
-                  <Table stickyHeader size="small">
-                    <TableHead>
-                      <TableRow sx={{
-                        background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
-                        border: '2px solid #e0e0e0'
+                {/* แสดงตารางแยกตามเวร */}
+                {SHIFTS.map((shift) => {
+                  const staffInShift = getStaffByShift(shift.id, editingAssignment.date || '');
+                  if (staffInShift.length === 0) return null;
+                  
+                  return (
+                    <Box key={shift.id} sx={{ mb: 3 }}>
+                      <Typography variant="h6" sx={{ 
+                        fontFamily: 'Kanit', 
+                        mb: 2,
+                        fontWeight: 'bold',
+                        color: shift.id === 'morning' ? '#ff9800' : shift.id === 'afternoon' ? '#4caf50' : '#9c27b0',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1
                       }}>
-                        <TableCell sx={{ 
-                          fontFamily: 'Kanit', 
-                          fontWeight: 'bold',
-                          color: '#333',
-                          borderBottom: '2px solid #e0e0e0',
-                          textAlign: 'center',
-                          minWidth: 150,
-                          backgroundColor: '#f8f9fa'
-                        }}>
-                          ชื่อเจ้าหน้าที่
-                        </TableCell>
-                        {!isPanuwat ? (
-                          <>
-                            <TableCell sx={{ 
-                              fontFamily: 'Kanit', 
-                              fontWeight: 'bold',
-                              color: '#333',
-                              borderBottom: '2px solid #e0e0e0',
-                              textAlign: 'center',
-                              minWidth: 120,
-                              backgroundColor: '#f8f9fa'
+                        <Box sx={{
+                          width: 12,
+                          height: 12,
+                          borderRadius: '50%',
+                          backgroundColor: shift.id === 'morning' ? '#ff9800' : shift.id === 'afternoon' ? '#4caf50' : '#9c27b0'
+                        }} />
+                        เวร{shift.name} ({staffInShift.length} คน)
+                      </Typography>
+                      
+                      <TableContainer component={Paper} sx={{ 
+                        maxHeight: 300,
+                        borderRadius: '15px',
+                        boxShadow: '0 8px 25px rgba(0,0,0,0.1)',
+                        border: '2px solid rgba(0,0,0,0.05)',
+                        borderLeft: `4px solid ${shift.id === 'morning' ? '#ff9800' : shift.id === 'afternoon' ? '#4caf50' : '#9c27b0'}`
+                      }}>
+                        <Table stickyHeader size="small">
+                          <TableHead>
+                            <TableRow sx={{
+                              background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+                              border: '2px solid #e0e0e0'
                             }}>
-                              เตียงที่ดูแล
-                            </TableCell>
-                            <TableCell sx={{ 
-                              fontFamily: 'Kanit', 
-                              fontWeight: 'bold',
-                              color: '#333',
-                              borderBottom: '2px solid #e0e0e0',
-                              textAlign: 'center',
-                              minWidth: 150,
-                              backgroundColor: '#f8f9fa'
-                            }}>
-                              หน้าที่รับผิดชอบ
-                            </TableCell>
-                            <TableCell sx={{ 
-                              fontFamily: 'Kanit', 
-                              fontWeight: 'bold',
-                              color: '#333',
-                              borderBottom: '2px solid #e0e0e0',
-                              textAlign: 'center',
-                              minWidth: 100,
-                              backgroundColor: '#f8f9fa'
-                            }}>
-                              ดูแลยาเสพติด
-                            </TableCell>
-                            <TableCell sx={{ 
-                              fontFamily: 'Kanit', 
-                              fontWeight: 'bold',
-                              color: '#333',
-                              borderBottom: '2px solid #e0e0e0',
-                              textAlign: 'center',
-                              minWidth: 120,
-                              backgroundColor: '#f8f9fa'
-                            }}>
-                              หน้าที่ ERT
-                            </TableCell>
-                          </>
-                        ) : (
-                          <>
-                            <TableCell sx={{ 
-                              fontFamily: 'Kanit', 
-                              fontWeight: 'bold',
-                              color: '#333',
-                              borderBottom: '2px solid #e0e0e0',
-                              textAlign: 'center',
-                              minWidth: 120,
-                              backgroundColor: '#f8f9fa'
-                            }}>
-                              หน้าที่ ERT
-                            </TableCell>
-                            <TableCell sx={{ 
-                              fontFamily: 'Kanit', 
-                              fontWeight: 'bold',
-                              color: '#333',
-                              borderBottom: '2px solid #e0e0e0',
-                              textAlign: 'center',
-                              minWidth: 80,
-                              backgroundColor: '#f8f9fa'
-                            }}>
-                              ทีม A/B
-                            </TableCell>
-                          </>
-                        )}
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {getStaffByShift(editingAssignment.shift || '', editingAssignment.date || '').map((staff) => (
-                        <TableRow key={staff.id} sx={{
-                          '&:hover': {
-                            backgroundColor: 'rgba(102, 126, 234, 0.05)'
-                          }
-                        }}>
-                          <TableCell sx={{ fontFamily: 'Kanit', textAlign: 'center' }}>
-                            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
-                              <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                                {staff.name}
-                              </Typography>
-                              <Box sx={{ display: 'flex', gap: 0.5 }}>
-                                <Chip 
-                                  label={staff.type === 'nurse' ? 'พยาบาล' : 'ผู้ช่วย'} 
-                                  size="small" 
-                                  color={staff.type === 'nurse' ? 'primary' : 'secondary'}
-                                  sx={{ fontSize: '0.7rem' }}
-                                />
-                                {staff.isPartTime && (
-                                  <Chip 
-                                    label="พาร์ทไทม์" 
-                                    size="small" 
-                                    color="warning"
-                                    sx={{ fontSize: '0.7rem' }}
-                                  />
-                                )}
-                              </Box>
-                            </Box>
-                          </TableCell>
-                          
-                          {!isPanuwat ? (
-                            <>
-                              {/* เตียงที่ดูแล (เฉพาะพยาบาล) */}
-                              <TableCell sx={{ textAlign: 'center' }}>
-                                {staff.type === 'nurse' ? (
-                                  <Select
-                                    size="small"
-                                    value={getStaffAssignment(staff.id, 'bedArea')}
-                                    onChange={(e) => updateStaffAssignment(staff.id, 'bedArea', e.target.value)}
-                                    sx={{ 
-                                      fontFamily: 'Kanit', 
-                                      minWidth: 100,
-                                      '& .MuiOutlinedInput-root': {
-                                        borderRadius: '10px'
-                                      }
-                                    }}
-                                  >
-                                    <MenuItem value="">-</MenuItem>
-                                    {BED_AREAS.map((area) => (
-                                      <MenuItem key={area} value={area} sx={{ fontFamily: 'Kanit' }}>
-                                        {area}
-                                      </MenuItem>
-                                    ))}
-                                  </Select>
-                                ) : '-'}
+                              <TableCell sx={{ 
+                                fontFamily: 'Kanit', 
+                                fontWeight: 'bold',
+                                color: '#333',
+                                borderBottom: '2px solid #e0e0e0',
+                                textAlign: 'center',
+                                minWidth: 150,
+                                backgroundColor: '#f8f9fa'
+                              }}>
+                                ชื่อเจ้าหน้าที่
                               </TableCell>
-                              
-                              {/* หน้าที่รับผิดชอบ (เฉพาะพยาบาล) */}
-                              <TableCell sx={{ textAlign: 'center' }}>
-                                {staff.type === 'nurse' ? (
-                                  <Select
-                                    multiple
-                                    size="small"
-                                    value={getStaffAssignment(staff.id, 'duties') as string[]}
-                                    onChange={(e) => {
-                                      const value = typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value;
-                                      updateStaffAssignment(staff.id, 'duties', value);
-                                    }}
-                                    renderValue={(selected) => (
-                                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.3 }}>
-                                        {(selected as string[]).map((value: string) => (
-                                          <Chip key={value} label={value} size="small" />
-                                        ))}
-                                      </Box>
-                                    )}
-                                    sx={{ 
-                                      fontFamily: 'Kanit', 
-                                      minWidth: 150,
-                                      '& .MuiOutlinedInput-root': {
-                                        borderRadius: '10px'
-                                      }
-                                    }}
-                                  >
-                                    {DUTIES.map((duty) => (
-                                      <MenuItem key={duty} value={duty} sx={{ fontFamily: 'Kanit' }}>
-                                        <Checkbox 
-                                          checked={(getStaffAssignment(staff.id, 'duties') as string[]).indexOf(duty) > -1}
-                                          sx={{ mr: 1 }}
+                              {!isPanuwat ? (
+                                <>
+                                  <TableCell sx={{ 
+                                    fontFamily: 'Kanit', 
+                                    fontWeight: 'bold',
+                                    color: '#333',
+                                    borderBottom: '2px solid #e0e0e0',
+                                    textAlign: 'center',
+                                    minWidth: 120,
+                                    backgroundColor: '#f8f9fa'
+                                  }}>
+                                    เตียงที่ดูแล
+                                  </TableCell>
+                                  <TableCell sx={{ 
+                                    fontFamily: 'Kanit', 
+                                    fontWeight: 'bold',
+                                    color: '#333',
+                                    borderBottom: '2px solid #e0e0e0',
+                                    textAlign: 'center',
+                                    minWidth: 150,
+                                    backgroundColor: '#f8f9fa'
+                                  }}>
+                                    หน้าที่รับผิดชอบ
+                                  </TableCell>
+                                  <TableCell sx={{ 
+                                    fontFamily: 'Kanit', 
+                                    fontWeight: 'bold',
+                                    color: '#333',
+                                    borderBottom: '2px solid #e0e0e0',
+                                    textAlign: 'center',
+                                    minWidth: 100,
+                                    backgroundColor: '#f8f9fa'
+                                  }}>
+                                    ดูแลยาเสพติด
+                                  </TableCell>
+                                  <TableCell sx={{ 
+                                    fontFamily: 'Kanit', 
+                                    fontWeight: 'bold',
+                                    color: '#333',
+                                    borderBottom: '2px solid #e0e0e0',
+                                    textAlign: 'center',
+                                    minWidth: 120,
+                                    backgroundColor: '#f8f9fa'
+                                  }}>
+                                    หน้าที่ ERT
+                                  </TableCell>
+                                </>
+                              ) : (
+                                <>
+                                  <TableCell sx={{ 
+                                    fontFamily: 'Kanit', 
+                                    fontWeight: 'bold',
+                                    color: '#333',
+                                    borderBottom: '2px solid #e0e0e0',
+                                    textAlign: 'center',
+                                    minWidth: 120,
+                                    backgroundColor: '#f8f9fa'
+                                  }}>
+                                    หน้าที่ ERT
+                                  </TableCell>
+                                  <TableCell sx={{ 
+                                    fontFamily: 'Kanit', 
+                                    fontWeight: 'bold',
+                                    color: '#333',
+                                    borderBottom: '2px solid #e0e0e0',
+                                    textAlign: 'center',
+                                    minWidth: 80,
+                                    backgroundColor: '#f8f9fa'
+                                  }}>
+                                    ทีม
+                                  </TableCell>
+                                </>
+                              )}
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {staffInShift.map((staff) => (
+                              <TableRow key={staff.id} sx={{
+                                '&:hover': {
+                                  backgroundColor: 'rgba(102, 126, 234, 0.05)'
+                                }
+                              }}>
+                                <TableCell sx={{ fontFamily: 'Kanit', textAlign: 'center' }}>
+                                  <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                                      {staff.name}
+                                    </Typography>
+                                    <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                      <Chip 
+                                        label={staff.type === 'nurse' ? 'พยาบาล' : 'ผู้ช่วย'} 
+                                        size="small" 
+                                        color={staff.type === 'nurse' ? 'primary' : 'secondary'}
+                                        sx={{ fontSize: '0.7rem' }}
+                                      />
+                                      {staff.isPartTime && (
+                                        <Chip 
+                                          label="พาร์ทไทม์" 
+                                          size="small" 
+                                          color="warning"
+                                          sx={{ fontSize: '0.7rem' }}
                                         />
-                                        <ListItemText primary={duty} />
-                                      </MenuItem>
-                                    ))}
-                                  </Select>
-                                ) : '-'}
-                              </TableCell>
-                              
-                              {/* ดูแลยาเสพติด (เฉพาะพยาบาล) */}
-                              <TableCell sx={{ textAlign: 'center' }}>
-                                {staff.type === 'nurse' ? (
-                                  <Checkbox
-                                    checked={getStaffAssignment(staff.id, 'drugSupervision') as boolean}
-                                    onChange={(e) => updateStaffAssignment(staff.id, 'drugSupervision', e.target.checked)}
-                                    sx={{
-                                      '&.Mui-checked': {
-                                        color: '#ff9800'
-                                      }
-                                    }}
-                                  />
-                                ) : '-'}
-                              </TableCell>
-                              
-                              {/* หน้าที่ ERT (ทุกคน) */}
-                              <TableCell sx={{ textAlign: 'center' }}>
-                                <Select
-                                  size="small"
-                                  value={getStaffAssignment(staff.id, 'ert')}
-                                  onChange={(e) => updateStaffAssignment(staff.id, 'ert', e.target.value)}
-                                  sx={{ 
-                                    fontFamily: 'Kanit', 
-                                    minWidth: 120,
-                                    '& .MuiOutlinedInput-root': {
-                                      borderRadius: '10px'
-                                    }
-                                  }}
-                                >
-                                  <MenuItem value="">-</MenuItem>
-                                  {ERT_ROLES.map((role) => (
-                                    <MenuItem key={role} value={role} sx={{ fontFamily: 'Kanit' }}>
-                                      {role}
-                                    </MenuItem>
-                                  ))}
-                                </Select>
-                              </TableCell>
-                            </>
-                          ) : (
-                            <>
-                              {/* สำหรับภาณุวัฒน์: หน้าที่ ERT (ทุกคน) */}
-                              <TableCell sx={{ textAlign: 'center' }}>
-                                <Select
-                                  size="small"
-                                  value={getStaffAssignment(staff.id, 'ert')}
-                                  onChange={(e) => updateStaffAssignment(staff.id, 'ert', e.target.value)}
-                                  sx={{ 
-                                    fontFamily: 'Kanit', 
-                                    minWidth: 120,
-                                    '& .MuiOutlinedInput-root': {
-                                      borderRadius: '10px'
-                                    }
-                                  }}
-                                >
-                                  <MenuItem value="">-</MenuItem>
-                                  {ERT_ROLES.map((role) => (
-                                    <MenuItem key={role} value={role} sx={{ fontFamily: 'Kanit' }}>
-                                      {role}
-                                    </MenuItem>
-                                  ))}
-                                </Select>
-                              </TableCell>
-                            </>
-                          )}
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
+                                      )}
+                                    </Box>
+                                  </Box>
+                                </TableCell>
+                                
+                                {!isPanuwat ? (
+                                  <>
+                                    {/* เตียงที่ดูแล (เฉพาะพยาบาล) */}
+                                    <TableCell sx={{ textAlign: 'center' }}>
+                                      {staff.type === 'nurse' ? (
+                                        <Select
+                                          size="small"
+                                          value={getStaffAssignment(staff.id, 'bedArea', shift.id)}
+                                          onChange={(e) => updateStaffAssignment(staff.id, 'bedArea', e.target.value, shift.id)}
+                                          sx={{ 
+                                            fontFamily: 'Kanit', 
+                                            minWidth: 100,
+                                            '& .MuiOutlinedInput-root': {
+                                              borderRadius: '10px'
+                                            }
+                                          }}
+                                        >
+                                          <MenuItem value="">-</MenuItem>
+                                          {BED_AREAS.map((area) => (
+                                            <MenuItem key={area} value={area} sx={{ fontFamily: 'Kanit' }}>
+                                              {area}
+                                            </MenuItem>
+                                          ))}
+                                        </Select>
+                                      ) : '-'}
+                                    </TableCell>
+                                    
+                                    {/* หน้าที่รับผิดชอบ (เฉพาะพยาบาล) */}
+                                    <TableCell sx={{ textAlign: 'center' }}>
+                                      {staff.type === 'nurse' ? (
+                                        <Select
+                                          multiple
+                                          size="small"
+                                          value={getStaffAssignment(staff.id, 'duties', shift.id) as string[]}
+                                          onChange={(e) => {
+                                            const value = typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value;
+                                            updateStaffAssignment(staff.id, 'duties', value, shift.id);
+                                          }}
+                                          renderValue={(selected) => (
+                                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.3 }}>
+                                              {(selected as string[]).map((value: string) => (
+                                                <Chip key={value} label={value} size="small" />
+                                              ))}
+                                            </Box>
+                                          )}
+                                          sx={{ 
+                                            fontFamily: 'Kanit', 
+                                            minWidth: 150,
+                                            '& .MuiOutlinedInput-root': {
+                                              borderRadius: '10px'
+                                            }
+                                          }}
+                                        >
+                                          {DUTIES.map((duty) => (
+                                            <MenuItem key={duty} value={duty} sx={{ fontFamily: 'Kanit' }}>
+                                              <Checkbox 
+                                                checked={(getStaffAssignment(staff.id, 'duties', shift.id) as string[]).indexOf(duty) > -1}
+                                                sx={{ mr: 1 }}
+                                              />
+                                              <ListItemText primary={duty} />
+                                            </MenuItem>
+                                          ))}
+                                        </Select>
+                                      ) : '-'}
+                                    </TableCell>
+                                    
+                                    {/* ดูแลยาเสพติด (เฉพาะพยาบาล) */}
+                                    <TableCell sx={{ textAlign: 'center' }}>
+                                      {staff.type === 'nurse' ? (
+                                        <Checkbox
+                                          checked={getStaffAssignment(staff.id, 'drugSupervision', shift.id) as boolean}
+                                          onChange={(e) => updateStaffAssignment(staff.id, 'drugSupervision', e.target.checked, shift.id)}
+                                          sx={{
+                                            '&.Mui-checked': {
+                                              color: '#ff9800'
+                                            }
+                                          }}
+                                        />
+                                      ) : '-'}
+                                    </TableCell>
+                                    
+                                    {/* หน้าที่ ERT (ทุกคน) */}
+                                    <TableCell sx={{ textAlign: 'center' }}>
+                                      <Select
+                                        size="small"
+                                        value={getStaffAssignment(staff.id, 'ert', shift.id)}
+                                        onChange={(e) => updateStaffAssignment(staff.id, 'ert', e.target.value, shift.id)}
+                                        sx={{ 
+                                          fontFamily: 'Kanit', 
+                                          minWidth: 120,
+                                          '& .MuiOutlinedInput-root': {
+                                            borderRadius: '10px'
+                                          }
+                                        }}
+                                      >
+                                        <MenuItem value="">-</MenuItem>
+                                        {ERT_ROLES.map((role) => (
+                                          <MenuItem key={role} value={role} sx={{ fontFamily: 'Kanit' }}>
+                                            {role}
+                                          </MenuItem>
+                                        ))}
+                                      </Select>
+                                    </TableCell>
+                                  </>
+                                ) : (
+                                  <>
+                                    {/* สำหรับภาณุวัฒน์: หน้าที่ ERT (ทุกคน) */}
+                                    <TableCell sx={{ textAlign: 'center' }}>
+                                      <Select
+                                        size="small"
+                                        value={getStaffAssignment(staff.id, 'ert', shift.id)}
+                                        onChange={(e) => updateStaffAssignment(staff.id, 'ert', e.target.value, shift.id)}
+                                        sx={{ 
+                                          fontFamily: 'Kanit', 
+                                          minWidth: 120,
+                                          '& .MuiOutlinedInput-root': {
+                                            borderRadius: '10px'
+                                          }
+                                        }}
+                                      >
+                                        <MenuItem value="">-</MenuItem>
+                                        {ERT_ROLES.map((role) => (
+                                          <MenuItem key={role} value={role} sx={{ fontFamily: 'Kanit' }}>
+                                            {role}
+                                          </MenuItem>
+                                        ))}
+                                      </Select>
+                                    </TableCell>
+                                    {/* สำหรับภาณุวัฒน์: ทีม A/B */}
+                                    <TableCell sx={{ textAlign: 'center' }}>
+                                      <Select
+                                        size="small"
+                                        value={getStaffAssignment(staff.id, 'team', shift.id)}
+                                        onChange={(e) => updateStaffAssignment(staff.id, 'team', e.target.value, shift.id)}
+                                        sx={{ 
+                                          fontFamily: 'Kanit', 
+                                          minWidth: 80,
+                                          '& .MuiOutlinedInput-root': {
+                                            borderRadius: '10px'
+                                          }
+                                        }}
+                                      >
+                                        <MenuItem value="">-</MenuItem>
+                                        {TEAMS.map((team) => (
+                                          <MenuItem key={team} value={team} sx={{ fontFamily: 'Kanit' }}>
+                                            {team}
+                                          </MenuItem>
+                                        ))}
+                                      </Select>
+                                    </TableCell>
+                                  </>
+                                )}
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    </Box>
+                  );
+                })}
               </Box>
             )}
           </Box>
@@ -1661,7 +1730,7 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
           <Button 
             onClick={handleSaveAssignment} 
             variant="contained" 
-            disabled={!editingAssignment.date || !editingAssignment.shift}
+            disabled={!editingAssignment.date}
             startIcon={<SaveIcon />}
             sx={{ 
               fontFamily: 'Kanit',
