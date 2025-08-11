@@ -311,7 +311,22 @@ const App: React.FC = () => {
                 <Button
                   variant="contained"
                   onClick={handlePublishSchedule}
-                  sx={{ fontFamily: 'Kanit' }}
+                  sx={{ 
+                    fontFamily: 'Kanit',
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    color: 'white',
+                    borderRadius: '25px',
+                    padding: '12px 30px',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                    boxShadow: '0 8px 25px rgba(102, 126, 234, 0.3)',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
+                      boxShadow: '0 12px 35px rgba(102, 126, 234, 0.4)',
+                      transform: 'translateY(-2px)'
+                    }
+                  }}
                 >
                   บันทึก
                 </Button>
@@ -365,7 +380,22 @@ const App: React.FC = () => {
                   <Button
                     variant="contained"
                     onClick={handlePublishAssignments}
-                    sx={{ fontFamily: 'Kanit' }}
+                    sx={{ 
+                      fontFamily: 'Kanit',
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      color: 'white',
+                      borderRadius: '25px',
+                      padding: '12px 30px',
+                      fontSize: '16px',
+                      fontWeight: 'bold',
+                      boxShadow: '0 8px 25px rgba(102, 126, 234, 0.3)',
+                      transition: 'all 0.3s ease',
+                      '&:hover': {
+                        background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
+                        boxShadow: '0 12px 35px rgba(102, 126, 234, 0.4)',
+                        transform: 'translateY(-2px)'
+                      }
+                    }}
                   >
                     บันทึก
                   </Button>
