@@ -486,7 +486,7 @@ const App: React.FC = () => {
                     transition: 'all 0.3s ease',
                   }}
                 >
-                  ส่งออก
+                  เผยแพร่
                 </Button>
                 <Button
                   variant="contained"
@@ -639,7 +639,7 @@ const App: React.FC = () => {
                     transition: 'all 0.3s ease',
                   }}
                 >
-                  ส่งออก
+                  เผยแพร่
                 </Button>
                 <Button
                   variant="outlined"
