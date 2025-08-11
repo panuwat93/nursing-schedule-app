@@ -15,6 +15,8 @@ import {
   useTheme,
   useMediaQuery,
   Divider,
+  Avatar,
+  Chip,
 } from '@mui/material';
 import { 
   LocalHospital, 
@@ -25,7 +27,8 @@ import {
   Favorite,
   Menu as MenuIcon,
   Close as CloseIcon,
-  Lock as LockIcon
+  Lock as LockIcon,
+  Person as PersonIcon
 } from '@mui/icons-material';
 import { nurses, assistants } from '../data/nurses';
 import ChangePassword from './ChangePassword';
@@ -133,66 +136,176 @@ const Header: React.FC<HeaderProps> = ({
 
   return (
     <>
-      <AppBar position="static" sx={{ backgroundColor: '#2196f3' }}>
+      <AppBar 
+        position="static" 
+        elevation={0}
+        sx={{ 
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          borderBottom: '1px solid rgba(255,255,255,0.1)',
+          backdropFilter: 'blur(10px)',
+        }}
+      >
         <Container maxWidth="xl">
-          <Toolbar>
-            <Favorite sx={{ mr: 2, fontSize: 32, color: '#ff4444' }} />
-            <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontFamily: 'Kanit' }}>
-              SA-SICU1
-            </Typography>
+          <Toolbar sx={{ minHeight: '70px' }}>
+            {/* Logo Section */}
+            <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 48,
+                  height: 48,
+                  borderRadius: '50%',
+                  background: 'linear-gradient(45deg, #ff6b6b, #ff8e8e)',
+                  boxShadow: '0 4px 15px rgba(255, 107, 107, 0.3)',
+                  mr: 2,
+                }}
+              >
+                <Favorite sx={{ fontSize: 24, color: 'white' }} />
+              </Box>
+              <Typography 
+                variant="h5" 
+                component="div" 
+                sx={{ 
+                  fontFamily: 'Kanit',
+                  fontWeight: 700,
+                  background: 'linear-gradient(45deg, #ffffff, #f0f8ff)',
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  textShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                }}
+              >
+                SA-SICU1
+              </Typography>
+            </Box>
             
-            {/* แสดงข้อมูลผู้ใช้ */}
+            {/* User Info Section */}
             {(isStaffLoggedIn || isAdmin) && (
-              <Box sx={{ display: 'flex', alignItems: 'center', mr: isMobile ? 1 : 2 }}>
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                mr: isMobile ? 1 : 3,
+                background: 'rgba(255,255,255,0.1)',
+                borderRadius: '25px',
+                px: 2,
+                py: 1,
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255,255,255,0.2)',
+              }}>
+                <Avatar
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    mr: 1.5,
+                    background: 'linear-gradient(45deg, #4fc3f7, #29b6f6)',
+                    boxShadow: '0 2px 8px rgba(79, 195, 247, 0.3)',
+                  }}
+                >
+                  <PersonIcon sx={{ fontSize: 18 }} />
+                </Avatar>
                 <Typography 
                   variant="body2" 
                   sx={{ 
                     fontFamily: 'Kanit', 
                     color: 'white', 
-                    mr: 1,
-                    fontSize: isMobile ? '0.75rem' : '0.875rem',
+                    mr: 2,
+                    fontSize: '0.875rem',
+                    fontWeight: 500,
                     display: isMobile ? 'none' : 'block'
                   }}
                 >
                   {isAdmin ? 'แอดมิน' : `เจ้าหน้าที่: ${getStaffName(currentStaffId)}`}
                 </Typography>
+                
                 {!isAdmin && isStaffLoggedIn && !isMobile && (
-                  <Button
-                    color="inherit"
-                    startIcon={<LockIcon />}
+                  <Chip
+                    icon={<LockIcon />}
+                    label="เปลี่ยนรหัสผ่าน"
                     onClick={() => setChangePasswordOpen(true)}
-                    sx={{ fontFamily: 'Kanit', fontSize: '0.8rem', mr: 1 }}
-                  >
-                    เปลี่ยนรหัสผ่าน
-                  </Button>
+                    sx={{
+                      fontFamily: 'Kanit',
+                      fontSize: '0.75rem',
+                      height: 28,
+                      background: 'rgba(255,255,255,0.15)',
+                      color: 'white',
+                      border: '1px solid rgba(255,255,255,0.3)',
+                      '&:hover': {
+                        background: 'rgba(255,255,255,0.25)',
+                      },
+                      '& .MuiChip-icon': {
+                        color: 'rgba(255,255,255,0.8)',
+                        fontSize: '1rem',
+                      },
+                    }}
+                  />
                 )}
+                
                 {onLogout && !isMobile && (
-                  <Button
-                    color="inherit"
+                  <Chip
+                    icon={<Logout />}
+                    label="ออกจากระบบ"
                     onClick={onLogout}
-                    sx={{ fontFamily: 'Kanit', fontSize: '0.8rem' }}
-                  >
-                    ออกจากระบบ
-                  </Button>
+                    sx={{
+                      fontFamily: 'Kanit',
+                      fontSize: '0.75rem',
+                      height: 28,
+                      ml: 1,
+                      background: 'rgba(244, 67, 54, 0.2)',
+                      color: 'white',
+                      border: '1px solid rgba(244, 67, 54, 0.4)',
+                      '&:hover': {
+                        background: 'rgba(244, 67, 54, 0.3)',
+                      },
+                      '& .MuiChip-icon': {
+                        color: 'rgba(255,255,255,0.8)',
+                        fontSize: '1rem',
+                      },
+                    }}
+                  />
                 )}
               </Box>
             )}
             
             {/* Desktop Menu */}
             {!isMobile && (
-              <Box sx={{ display: 'flex', gap: 1 }}>
+              <Box sx={{ display: 'flex', gap: 1.5 }}>
                 {menuItems.map((item) => (
                   <Button
                     key={item.key}
-                    color="inherit"
+                    variant="contained"
                     startIcon={item.icon}
                     onClick={() => item.key === 'admin' ? onPageChange('admin-login') : onPageChange(item.key)}
                     sx={{
                       fontFamily: 'Kanit',
-                      backgroundColor: currentPage === item.key ? 'rgba(255,255,255,0.2)' : 'transparent',
+                      fontWeight: 500,
+                      fontSize: '0.875rem',
+                      textTransform: 'none',
+                      borderRadius: '20px',
+                      px: 2.5,
+                      py: 1,
+                      background: currentPage === item.key 
+                        ? 'linear-gradient(45deg, #ffffff, #f0f8ff)' 
+                        : 'rgba(255,255,255,0.15)',
+                      color: currentPage === item.key ? '#333' : 'white',
+                      border: currentPage === item.key 
+                        ? 'none' 
+                        : '1px solid rgba(255,255,255,0.3)',
+                      boxShadow: currentPage === item.key 
+                        ? '0 4px 15px rgba(255,255,255,0.3)' 
+                        : 'none',
+                      backdropFilter: 'blur(10px)',
                       '&:hover': {
-                        backgroundColor: 'rgba(255,255,255,0.1)',
+                        background: currentPage === item.key 
+                          ? 'linear-gradient(45deg, #f0f8ff, #e6f3ff)' 
+                          : 'rgba(255,255,255,0.25)',
+                        transform: 'translateY(-1px)',
+                        boxShadow: currentPage === item.key 
+                          ? '0 6px 20px rgba(255,255,255,0.4)' 
+                          : '0 4px 15px rgba(255,255,255,0.2)',
                       },
+                      transition: 'all 0.3s ease',
                     }}
                   >
                     {item.label}
@@ -206,7 +319,15 @@ const Header: React.FC<HeaderProps> = ({
               <IconButton
                 color="inherit"
                 onClick={handleMobileMenuToggle}
-                sx={{ ml: 1 }}
+                sx={{ 
+                  ml: 1,
+                  background: 'rgba(255,255,255,0.1)',
+                  backdropFilter: 'blur(10px)',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  '&:hover': {
+                    background: 'rgba(255,255,255,0.2)',
+                  },
+                }}
               >
                 <MenuIcon />
               </IconButton>
@@ -222,30 +343,65 @@ const Header: React.FC<HeaderProps> = ({
         onClose={handleMobileMenuClose}
         sx={{
           '& .MuiDrawer-paper': {
-            width: 280,
-            backgroundColor: '#f5f5f5',
+            width: 320,
+            background: 'linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%)',
+            borderLeft: '1px solid rgba(0,0,0,0.1)',
           },
         }}
       >
-        <Box sx={{ width: 280 }} role="presentation">
+        <Box sx={{ width: 320 }} role="presentation">
           {/* Header ของ Drawer */}
           <Box sx={{ 
-            p: 2, 
-            backgroundColor: '#2196f3', 
+            p: 3, 
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
             color: 'white',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'space-between'
+            justifyContent: 'space-between',
+            position: 'relative',
+            overflow: 'hidden',
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.05"%3E%3Ccircle cx="30" cy="30" r="2"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")',
+              opacity: 0.3,
+            },
           }}>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Favorite sx={{ mr: 2, fontSize: 28, color: '#ff4444' }} />
-              <Typography variant="h6" sx={{ fontFamily: 'Kanit' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', position: 'relative', zIndex: 1 }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 48,
+                  height: 48,
+                  borderRadius: '50%',
+                  background: 'linear-gradient(45deg, #ff6b6b, #ff8e8e)',
+                  boxShadow: '0 4px 15px rgba(255, 107, 107, 0.3)',
+                  mr: 2,
+                }}
+              >
+                <Favorite sx={{ fontSize: 24, color: 'white' }} />
+              </Box>
+              <Typography variant="h6" sx={{ fontFamily: 'Kanit', fontWeight: 700 }}>
                 SA-SICU1
               </Typography>
             </Box>
             <IconButton
               color="inherit"
               onClick={handleMobileMenuClose}
+              sx={{
+                background: 'rgba(255,255,255,0.1)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                '&:hover': {
+                  background: 'rgba(255,255,255,0.2)',
+                },
+              }}
             >
               <CloseIcon />
             </IconButton>
@@ -254,10 +410,40 @@ const Header: React.FC<HeaderProps> = ({
           {/* ข้อมูลผู้ใช้ */}
           {(isStaffLoggedIn || isAdmin) && (
             <>
-              <Box sx={{ p: 2, backgroundColor: '#e3f2fd' }}>
-                <Typography variant="body2" sx={{ fontFamily: 'Kanit', fontWeight: 'bold' }}>
-                  {isAdmin ? 'แอดมิน' : `เจ้าหน้าที่: ${getStaffName(currentStaffId)}`}
-                </Typography>
+              <Box sx={{ 
+                p: 3, 
+                background: 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)',
+                borderBottom: '1px solid rgba(0,0,0,0.1)',
+              }}>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Avatar
+                    sx={{
+                      width: 48,
+                      height: 48,
+                      mr: 2,
+                      background: 'linear-gradient(45deg, #4fc3f7, #29b6f6)',
+                      boxShadow: '0 4px 15px rgba(79, 195, 247, 0.3)',
+                    }}
+                  >
+                    <PersonIcon sx={{ fontSize: 24 }} />
+                  </Avatar>
+                  <Box>
+                    <Typography variant="body2" sx={{ 
+                      fontFamily: 'Kanit', 
+                      fontWeight: 'bold',
+                      color: '#1976d2',
+                      fontSize: '1rem',
+                    }}>
+                      {isAdmin ? 'แอดมิน' : `เจ้าหน้าที่: ${getStaffName(currentStaffId)}`}
+                    </Typography>
+                    <Typography variant="caption" sx={{ 
+                      fontFamily: 'Kanit',
+                      color: '#666',
+                    }}>
+                      {isAdmin ? 'ผู้ดูแลระบบ' : 'เจ้าหน้าที่ทั่วไป'}
+                    </Typography>
+                  </Box>
+                </Box>
               </Box>
               <Divider />
             </>
@@ -274,9 +460,14 @@ const Header: React.FC<HeaderProps> = ({
                   }}
                   sx={{
                     cursor: 'pointer',
+                    mx: 2,
+                    my: 0.5,
+                    borderRadius: '12px',
                     '&:hover': {
-                      backgroundColor: '#e8f5e8',
+                      backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                      transform: 'translateX(4px)',
                     },
+                    transition: 'all 0.2s ease',
                   }}
                 >
                   <ListItemIcon sx={{ color: '#4caf50' }}>
@@ -287,6 +478,7 @@ const Header: React.FC<HeaderProps> = ({
                     primaryTypographyProps={{
                       fontFamily: 'Kanit',
                       color: '#4caf50',
+                      fontWeight: 500,
                     }}
                   />
                 </ListItem>
@@ -296,20 +488,29 @@ const Header: React.FC<HeaderProps> = ({
           )}
 
           {/* Menu Items */}
-          <List>
+          <List sx={{ py: 1 }}>
             {menuItems.map((item) => (
               <ListItem
                 key={item.key}
                 onClick={() => handleMobileMenuItemClick(item.key)}
                 sx={{
                   cursor: 'pointer',
-                  backgroundColor: currentPage === item.key ? '#e3f2fd' : 'transparent',
+                  mx: 2,
+                  my: 0.5,
+                  borderRadius: '12px',
+                  backgroundColor: currentPage === item.key ? 'rgba(33, 150, 243, 0.1)' : 'transparent',
+                  border: currentPage === item.key ? '1px solid rgba(33, 150, 243, 0.2)' : 'none',
                   '&:hover': {
-                    backgroundColor: '#f5f5f5',
+                    backgroundColor: currentPage === item.key ? 'rgba(33, 150, 243, 0.15)' : 'rgba(0,0,0,0.05)',
+                    transform: 'translateX(4px)',
                   },
+                  transition: 'all 0.2s ease',
                 }}
               >
-                <ListItemIcon sx={{ color: currentPage === item.key ? '#2196f3' : '#666' }}>
+                <ListItemIcon sx={{ 
+                  color: currentPage === item.key ? '#2196f3' : '#666',
+                  minWidth: 40,
+                }}>
                   {item.icon}
                 </ListItemIcon>
                 <ListItemText 
@@ -318,6 +519,7 @@ const Header: React.FC<HeaderProps> = ({
                     fontFamily: 'Kanit',
                     fontWeight: currentPage === item.key ? 'bold' : 'normal',
                     color: currentPage === item.key ? '#2196f3' : '#333',
+                    fontSize: '0.95rem',
                   }}
                 />
               </ListItem>
@@ -336,9 +538,14 @@ const Header: React.FC<HeaderProps> = ({
                   }}
                   sx={{
                     cursor: 'pointer',
+                    mx: 2,
+                    my: 0.5,
+                    borderRadius: '12px',
                     '&:hover': {
-                      backgroundColor: '#ffebee',
+                      backgroundColor: 'rgba(244, 67, 54, 0.1)',
+                      transform: 'translateX(4px)',
                     },
+                    transition: 'all 0.2s ease',
                   }}
                 >
                   <ListItemIcon sx={{ color: '#f44336' }}>
@@ -349,6 +556,7 @@ const Header: React.FC<HeaderProps> = ({
                     primaryTypographyProps={{
                       fontFamily: 'Kanit',
                       color: '#f44336',
+                      fontWeight: 500,
                     }}
                   />
                 </ListItem>

@@ -1,6 +1,14 @@
 import React, { useState } from 'react';
 import { Container, Box, Button, Alert, Snackbar, CircularProgress, Backdrop } from '@mui/material';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { 
+  Save as SaveIcon, 
+  FileDownload as ExportIcon, 
+  History as HistoryIcon, 
+  ArrowBack as BackIcon,
+  Schedule as ScheduleIcon,
+  Assignment as AssignmentIcon
+} from '@mui/icons-material';
 import Header from './components/Header';
 import MonthSelector from './components/MonthSelector';
 import MonthlySummary from './components/MonthlySummary';
@@ -406,36 +414,125 @@ const App: React.FC = () => {
       case 'admin-schedule':
         return (
           <Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-              <h2 style={{ fontFamily: 'Kanit' }}>จัดตารางเวร</h2>
-              <Box sx={{ display: 'flex', gap: 2 }}>
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center', 
+              mb: 3,
+              p: 3,
+              background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+              borderRadius: '16px',
+              border: '1px solid rgba(0,0,0,0.08)',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+            }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <ScheduleIcon sx={{ fontSize: 32, color: '#2196f3' }} />
+                <h2 style={{ 
+                  fontFamily: 'Kanit', 
+                  margin: 0,
+                  background: 'linear-gradient(45deg, #1976d2, #42a5f5)',
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  fontWeight: 700,
+                }}>
+                  จัดตารางเวร
+                </h2>
+              </Box>
+              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                 <Button
-                  variant="outlined"
-                  color="success"
+                  variant="contained"
+                  startIcon={<SaveIcon />}
                   onClick={handleSaveScheduleDraft}
-                  sx={{ fontFamily: 'Kanit' }}
+                  sx={{ 
+                    fontFamily: 'Kanit',
+                    fontWeight: 600,
+                    fontSize: '0.9rem',
+                    textTransform: 'none',
+                    borderRadius: '25px',
+                    px: 3,
+                    py: 1.5,
+                    background: 'linear-gradient(45deg, #4caf50, #66bb6a)',
+                    boxShadow: '0 4px 15px rgba(76, 175, 80, 0.3)',
+                    '&:hover': {
+                      background: 'linear-gradient(45deg, #43a047, #4caf50)',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 6px 20px rgba(76, 175, 80, 0.4)',
+                    },
+                    transition: 'all 0.3s ease',
+                  }}
                 >
                   บันทึกร่าง
                 </Button>
                 <Button
                   variant="contained"
+                  startIcon={<ExportIcon />}
                   onClick={handlePublishSchedule}
-                  sx={{ fontFamily: 'Kanit' }}
+                  sx={{ 
+                    fontFamily: 'Kanit',
+                    fontWeight: 600,
+                    fontSize: '0.9rem',
+                    textTransform: 'none',
+                    borderRadius: '25px',
+                    px: 3,
+                    py: 1.5,
+                    background: 'linear-gradient(45deg, #2196f3, #42a5f5)',
+                    boxShadow: '0 4px 15px rgba(33, 150, 243, 0.3)',
+                    '&:hover': {
+                      background: 'linear-gradient(45deg, #1976d2, #2196f3)',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 6px 20px rgba(33, 150, 243, 0.4)',
+                    },
+                    transition: 'all 0.3s ease',
+                  }}
                 >
                   ส่งออก
                 </Button>
                 <Button
-                  variant="outlined"
-                  color="warning"
+                  variant="contained"
+                  startIcon={<HistoryIcon />}
                   onClick={handleSaveOriginalSchedule}
-                  sx={{ fontFamily: 'Kanit' }}
+                  sx={{ 
+                    fontFamily: 'Kanit',
+                    fontWeight: 600,
+                    fontSize: '0.9rem',
+                    textTransform: 'none',
+                    borderRadius: '25px',
+                    px: 3,
+                    py: 1.5,
+                    background: 'linear-gradient(45deg, #ff9800, #ffb74d)',
+                    boxShadow: '0 4px 15px rgba(255, 152, 0, 0.3)',
+                    '&:hover': {
+                      background: 'linear-gradient(45deg, #f57c00, #ff9800)',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 6px 20px rgba(255, 152, 0, 0.4)',
+                    },
+                    transition: 'all 0.3s ease',
+                  }}
                 >
                   บันทึกตารางเวรก่อนแลก
                 </Button>
                 <Button
                   variant="outlined"
+                  startIcon={<BackIcon />}
                   onClick={() => setCurrentPage('schedule')}
-                  sx={{ fontFamily: 'Kanit' }}
+                  sx={{ 
+                    fontFamily: 'Kanit',
+                    fontWeight: 600,
+                    fontSize: '0.9rem',
+                    textTransform: 'none',
+                    borderRadius: '25px',
+                    px: 3,
+                    py: 1.5,
+                    border: '2px solid #9e9e9e',
+                    color: '#616161',
+                    '&:hover': {
+                      border: '2px solid #757575',
+                      backgroundColor: 'rgba(158, 158, 158, 0.04)',
+                      transform: 'translateY(-2px)',
+                    },
+                    transition: 'all 0.3s ease',
+                  }}
                 >
                   กลับ
                 </Button>
@@ -470,28 +567,101 @@ const App: React.FC = () => {
       case 'admin-assignments':
         return (
           <Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-              <h2 style={{ fontFamily: 'Kanit' }}>จัดตารางมอบหมายงาน</h2>
-              <Box sx={{ display: 'flex', gap: 2 }}>
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center', 
+              mb: 3,
+              p: 3,
+              background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+              borderRadius: '16px',
+              border: '1px solid rgba(0,0,0,0.08)',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+            }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <AssignmentIcon sx={{ fontSize: 32, color: '#ff6f00' }} />
+                <h2 style={{ 
+                  fontFamily: 'Kanit', 
+                  margin: 0,
+                  background: 'linear-gradient(45deg, #e65100, #ff6f00)',
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  fontWeight: 700,
+                }}>
+                  จัดตารางมอบหมายงาน
+                </h2>
+              </Box>
+              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                 <Button
-                  variant="outlined"
-                  color="success"
+                  variant="contained"
+                  startIcon={<SaveIcon />}
                   onClick={handleSaveAssignmentsDraft}
-                  sx={{ fontFamily: 'Kanit' }}
+                  sx={{ 
+                    fontFamily: 'Kanit',
+                    fontWeight: 600,
+                    fontSize: '0.9rem',
+                    textTransform: 'none',
+                    borderRadius: '25px',
+                    px: 3,
+                    py: 1.5,
+                    background: 'linear-gradient(45deg, #4caf50, #66bb6a)',
+                    boxShadow: '0 4px 15px rgba(76, 175, 80, 0.3)',
+                    '&:hover': {
+                      background: 'linear-gradient(45deg, #43a047, #4caf50)',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 6px 20px rgba(76, 175, 80, 0.4)',
+                    },
+                    transition: 'all 0.3s ease',
+                  }}
                 >
                   บันทึกร่าง
                 </Button>
                 <Button
                   variant="contained"
+                  startIcon={<ExportIcon />}
                   onClick={handlePublishAssignments}
-                  sx={{ fontFamily: 'Kanit' }}
+                  sx={{ 
+                    fontFamily: 'Kanit',
+                    fontWeight: 600,
+                    fontSize: '0.9rem',
+                    textTransform: 'none',
+                    borderRadius: '25px',
+                    px: 3,
+                    py: 1.5,
+                    background: 'linear-gradient(45deg, #2196f3, #42a5f5)',
+                    boxShadow: '0 4px 15px rgba(33, 150, 243, 0.3)',
+                    '&:hover': {
+                      background: 'linear-gradient(45deg, #1976d2, #2196f3)',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 6px 20px rgba(33, 150, 243, 0.4)',
+                    },
+                    transition: 'all 0.3s ease',
+                  }}
                 >
                   ส่งออก
                 </Button>
                 <Button
                   variant="outlined"
+                  startIcon={<BackIcon />}
                   onClick={() => setCurrentPage('schedule')}
-                  sx={{ fontFamily: 'Kanit' }}
+                  sx={{ 
+                    fontFamily: 'Kanit',
+                    fontWeight: 600,
+                    fontSize: '0.9rem',
+                    textTransform: 'none',
+                    borderRadius: '25px',
+                    px: 3,
+                    py: 1.5,
+                    border: '2px solid #9e9e9e',
+                    color: '#616161',
+                    '&:hover': {
+                      border: '2px solid #757575',
+                      backgroundColor: 'rgba(158, 158, 158, 0.04)',
+                      transform: 'translateY(-2px)',
+                    },
+                    transition: 'all 0.3s ease',
+                  }}
                 >
                   กลับ
                 </Button>
@@ -513,13 +683,53 @@ const App: React.FC = () => {
       case 'original-schedule':
         return (
           <Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-              <h2 style={{ fontFamily: 'Kanit' }}>ตารางเวรก่อนแลก</h2>
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center', 
+              mb: 3,
+              p: 3,
+              background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+              borderRadius: '16px',
+              border: '1px solid rgba(0,0,0,0.08)',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+            }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <HistoryIcon sx={{ fontSize: 32, color: '#ff9800' }} />
+                <h2 style={{ 
+                  fontFamily: 'Kanit', 
+                  margin: 0,
+                  background: 'linear-gradient(45deg, #f57c00, #ff9800)',
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  fontWeight: 700,
+                }}>
+                  ตารางเวรก่อนแลก
+                </h2>
+              </Box>
               <Box sx={{ display: 'flex', gap: 2 }}>
                 <Button
                   variant="outlined"
+                  startIcon={<BackIcon />}
                   onClick={() => setCurrentPage('admin-schedule')}
-                  sx={{ fontFamily: 'Kanit' }}
+                  sx={{ 
+                    fontFamily: 'Kanit',
+                    fontWeight: 600,
+                    fontSize: '0.9rem',
+                    textTransform: 'none',
+                    borderRadius: '25px',
+                    px: 3,
+                    py: 1.5,
+                    border: '2px solid #9e9e9e',
+                    color: '#616161',
+                    '&:hover': {
+                      border: '2px solid #757575',
+                      backgroundColor: 'rgba(158, 158, 158, 0.04)',
+                      transform: 'translateY(-2px)',
+                    },
+                    transition: 'all 0.3s ease',
+                  }}
                 >
                   กลับ
                 </Button>
