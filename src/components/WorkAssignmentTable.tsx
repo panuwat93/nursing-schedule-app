@@ -34,8 +34,20 @@ import {
   AccordionSummary,
   AccordionDetails,
   IconButton,
+  Fade,
+  Grow,
+  Zoom,
 } from '@mui/material';
-import { ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
+import { 
+  ExpandMore as ExpandMoreIcon,
+  Add as AddIcon,
+  Save as SaveIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  CalendarToday as CalendarIcon,
+  Person as PersonIcon,
+  Assignment as AssignmentIcon
+} from '@mui/icons-material';
 import { format } from 'date-fns';
 import { th } from 'date-fns/locale';
 import { WorkAssignment, ScheduleEntry } from '../types';
@@ -113,8 +125,7 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
   const [selectedMonth, setSelectedMonth] = useState(month.toString());
   const [selectedDay, setSelectedDay] = useState('1');
   
-  // View mode state
-  const [viewMode, setViewMode] = useState<'daily' | 'individual'>('daily');
+
 
   // Get current date for default selection
   const currentDate = new Date();
@@ -646,411 +657,575 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
 
   return (
     <Box>
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: isMobile ? 'flex-start' : 'center', 
-        mb: 2,
-        flexDirection: isMobile ? 'column' : 'row',
-        gap: isMobile ? 1 : 0
-      }}>
-        <Typography variant="h6" sx={{ fontFamily: 'Kanit' }}>
-          ตารางมอบหมายงานประจำวัน
-        </Typography>
-        {!isReadOnly && (
-          <Button
-            variant="contained"
-            onClick={handleAddAssignment}
-            sx={{ 
-              fontFamily: 'Kanit',
-              width: isMobile ? '100%' : 'auto',
-              fontSize: isMobile ? '0.9rem' : '1rem'
-            }}
-          >
-            เพิ่มมอบหมายงาน
-          </Button>
-        )}
-      </Box>
+      <style>
+        {`
+          @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          
+          @keyframes shimmer {
+            0% { background-position: -200px 0; }
+            100% { background-position: calc(200px + 100%) 0; }
+          }
+          
+          @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+          }
+          
+          @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+          }
+        `}
+      </style>
 
-      {/* Date Selection */}
-      <Paper sx={{ p: 2, mb: 2 }}>
-        <Typography variant="subtitle1" sx={{ fontFamily: 'Kanit', fontWeight: 'bold', mb: 2 }}>
-          เลือกวันที่
-        </Typography>
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} sm={3}>
-            <FormControl fullWidth>
-              <InputLabel sx={{ fontFamily: 'Kanit' }}>วัน</InputLabel>
-              <Select
-                value={selectedDay}
-                label="วัน"
-                onChange={(e: SelectChangeEvent) => setSelectedDay(e.target.value)}
-                sx={{ fontFamily: 'Kanit' }}
-              >
-                {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => (
-                  <MenuItem key={day} value={day.toString()} sx={{ fontFamily: 'Kanit' }}>
-                    {day}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} sm={3}>
-            <FormControl fullWidth>
-              <InputLabel sx={{ fontFamily: 'Kanit' }}>เดือน</InputLabel>
-              <Select
-                value={selectedMonth}
-                label="เดือน"
-                onChange={(e: SelectChangeEvent) => {
-                  const newMonth = Number(e.target.value);
-                  setSelectedMonth(newMonth.toString());
-                  // Reset day if it exceeds days in new month
-                  const newDaysInMonth = getDaysInMonth(Number(selectedYear), newMonth);
-                  if (Number(selectedDay) > newDaysInMonth) {
-                    setSelectedDay(newDaysInMonth.toString());
-                  }
-                }}
-                sx={{ fontFamily: 'Kanit' }}
-              >
-                {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
-                  <MenuItem key={month} value={month.toString()} sx={{ fontFamily: 'Kanit' }}>
-                    {format(new Date(Number(selectedYear), month - 1, 1), 'MMMM', { locale: th })}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} sm={3}>
-            <FormControl fullWidth>
-              <InputLabel sx={{ fontFamily: 'Kanit' }}>ปี</InputLabel>
-              <Select
-                value={selectedYear}
-                label="ปี"
-                onChange={(e: SelectChangeEvent) => {
-                  const newYear = Number(e.target.value);
-                  setSelectedYear(newYear.toString());
-                  // Reset day if it exceeds days in new year/month
-                  const newDaysInMonth = getDaysInMonth(newYear, Number(selectedMonth));
-                  if (Number(selectedDay) > newDaysInMonth) {
-                    setSelectedDay(newDaysInMonth.toString());
-                  }
-                }}
-                sx={{ fontFamily: 'Kanit' }}
-              >
-                {Array.from({ length: 10 }, (_, i) => defaultYear - 2 + i).map((year) => (
-                  <MenuItem key={year} value={year.toString()} sx={{ fontFamily: 'Kanit' }}>
-                    {year}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} sm={3}>
-            <Typography variant="body1" sx={{ fontFamily: 'Kanit', fontWeight: 'bold', color: 'primary.main' }}>
-              {formatDate(getSelectedDateString())}
+      {/* ส่วนเลือกวันที่ - สวยแบบตะโกน */}
+      <Fade in timeout={800}>
+        <Paper sx={{ 
+          p: 3, 
+          mb: 3, 
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          borderRadius: '20px',
+          boxShadow: '0 15px 35px rgba(102, 126, 234, 0.3)',
+          border: '2px solid rgba(255, 255, 255, 0.1)',
+          position: 'relative',
+          overflow: 'hidden'
+        }}>
+          {/* Background Pattern */}
+          <Box sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'radial-gradient(circle at 20% 80%, rgba(255,255,255,0.1) 0%, transparent 50%)',
+            pointerEvents: 'none'
+          }} />
+          
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+            <CalendarIcon sx={{ 
+              fontSize: 32, 
+              color: 'white',
+              filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))'
+            }} />
+            <Typography variant="h5" sx={{ 
+              fontFamily: 'Kanit', 
+              fontWeight: 'bold',
+              color: 'white',
+              textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+            }}>
+              เลือกวันที่
             </Typography>
+          </Box>
+          
+          <Grid container spacing={3} alignItems="center">
+            <Grid item xs={12} sm={3}>
+              <FormControl fullWidth>
+                <InputLabel sx={{ 
+                  fontFamily: 'Kanit', 
+                  color: 'white',
+                  fontWeight: 'bold',
+                  '&.Mui-focused': { color: 'white' }
+                }}>
+                  วัน
+                </InputLabel>
+                <Select
+                  value={selectedDay}
+                  label="วัน"
+                  onChange={(e: SelectChangeEvent) => {
+                    const newDay = e.target.value;
+                    setSelectedDay(newDay);
+                  }}
+                  sx={{ 
+                    fontFamily: 'Kanit',
+                    '& .MuiOutlinedInput-root': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                      borderRadius: '15px',
+                      '&:hover': {
+                        backgroundColor: 'rgba(255, 255, 255, 1)',
+                        transform: 'translateY(-2px)',
+                        boxShadow: '0 8px 25px rgba(0,0,0,0.15)'
+                      },
+                      '&.Mui-focused': {
+                        backgroundColor: 'rgba(255, 255, 255, 1)',
+                        boxShadow: '0 8px 25px rgba(0,0,0,0.2)'
+                      }
+                    },
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  {Array.from({ length: getDaysInMonth(Number(selectedYear), Number(selectedMonth)) }, (_, i) => i + 1).map((day) => (
+                    <MenuItem key={day} value={day.toString()} sx={{ fontFamily: 'Kanit' }}>
+                      {day}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={3}>
+              <FormControl fullWidth>
+                <InputLabel sx={{ 
+                  fontFamily: 'Kanit', 
+                  color: 'white',
+                  fontWeight: 'bold',
+                  '&.Mui-focused': { color: 'white' }
+                }}>
+                  เดือน
+                </InputLabel>
+                <Select
+                  value={selectedMonth}
+                  label="เดือน"
+                  onChange={(e: SelectChangeEvent) => {
+                    const newMonth = Number(e.target.value);
+                    setSelectedMonth(newMonth.toString());
+                    // Reset day if it exceeds days in new month
+                    const newDaysInMonth = getDaysInMonth(Number(selectedYear), newMonth);
+                    if (Number(selectedDay) > newDaysInMonth) {
+                      setSelectedDay(newDaysInMonth.toString());
+                    }
+                  }}
+                  sx={{ 
+                    fontFamily: 'Kanit',
+                    '& .MuiOutlinedInput-root': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                      borderRadius: '15px',
+                      '&:hover': {
+                        backgroundColor: 'rgba(255, 255, 255, 1)',
+                        transform: 'translateY(-2px)',
+                        boxShadow: '0 8px 25px rgba(0,0,0,0.15)'
+                      },
+                      '&.Mui-focused': {
+                        backgroundColor: 'rgba(255, 255, 255, 1)',
+                        boxShadow: '0 8px 25px rgba(0,0,0,0.2)'
+                      }
+                    },
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
+                    <MenuItem key={month} value={month.toString()} sx={{ fontFamily: 'Kanit' }}>
+                      {format(new Date(Number(selectedYear), month - 1, 1), 'MMMM', { locale: th })}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={3}>
+              <FormControl fullWidth>
+                <InputLabel sx={{ 
+                  fontFamily: 'Kanit', 
+                  color: 'white',
+                  fontWeight: 'bold',
+                  '&.Mui-focused': { color: 'white' }
+                }}>
+                  ปี
+                </InputLabel>
+                <Select
+                  value={selectedYear}
+                  label="ปี"
+                  onChange={(e: SelectChangeEvent) => {
+                    const newYear = Number(e.target.value);
+                    setSelectedYear(newYear.toString());
+                    // Reset day if it exceeds days in new year/month
+                    const newDaysInMonth = getDaysInMonth(newYear, Number(selectedMonth));
+                    if (Number(selectedDay) > newDaysInMonth) {
+                      setSelectedDay(newDaysInMonth.toString());
+                    }
+                  }}
+                  sx={{ 
+                    fontFamily: 'Kanit',
+                    '& .MuiOutlinedInput-root': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                      borderRadius: '15px',
+                      '&:hover': {
+                        backgroundColor: 'rgba(255, 255, 255, 1)',
+                        transform: 'translateY(-2px)',
+                        boxShadow: '0 8px 25px rgba(0,0,0,0.15)'
+                      },
+                      '&.Mui-focused': {
+                        backgroundColor: 'rgba(255, 255, 255, 1)',
+                        boxShadow: '0 8px 25px rgba(0,0,0,0.2)'
+                      }
+                    },
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  {Array.from({ length: 10 }, (_, i) => defaultYear - 2 + i).map((year) => (
+                    <MenuItem key={year} value={year.toString()} sx={{ fontFamily: 'Kanit' }}>
+                      {year}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={3}>
+              <Box sx={{
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                borderRadius: '15px',
+                p: 2,
+                textAlign: 'center',
+                border: '2px solid rgba(255, 255, 255, 0.3)',
+                boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+              }}>
+                <Typography variant="h6" sx={{ 
+                  fontFamily: 'Kanit', 
+                  fontWeight: 'bold', 
+                  color: '#667eea',
+                  textShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                }}>
+                  {formatDate(getSelectedDateString())}
+                </Typography>
+              </Box>
+            </Grid>
           </Grid>
-        </Grid>
-      </Paper>
+        </Paper>
+      </Fade>
 
-      {/* โหมดการดู */}
-      <Paper sx={{ p: 2, mb: 2, backgroundColor: '#f8f9fa' }}>
-        <Typography variant="h6" sx={{ fontFamily: 'Kanit', mb: 2 }}>
-          โหมดการดู
-        </Typography>
-        <ToggleButtonGroup
-          value={viewMode}
-          exclusive
-          onChange={(e, newMode) => {
-            if (newMode !== null) {
-              setViewMode(newMode);
-            }
-          }}
-          sx={{ fontFamily: 'Kanit' }}
-        >
-          <ToggleButton value="daily">
-            รายวัน
-          </ToggleButton>
-          <ToggleButton value="individual">
-            รายบุคคล
-          </ToggleButton>
-        </ToggleButtonGroup>
-      </Paper>
 
-      {viewMode === 'daily' ? (
-        isMobile ? (
-          // Mobile View: Card Layout
-          renderMobileAssignmentCards()
-        ) : (
-          // Desktop View: Table Layout
-          <TableContainer component={Paper}>
+
+      {/* ปุ่มเพิ่มมอบหมายงาน - สวยแบบตะโกน */}
+      {!isReadOnly && (
+        <Zoom in timeout={1200}>
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 3 }}>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={handleAddAssignment}
+              sx={{ 
+                fontFamily: 'Kanit',
+                fontWeight: 'bold',
+                fontSize: '16px',
+                padding: '15px 30px',
+                borderRadius: '25px',
+                background: 'linear-gradient(135deg, #4caf50, #66bb6a)',
+                color: 'white',
+                boxShadow: '0 8px 25px rgba(76, 175, 80, 0.3)',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #43a047, #4caf50)',
+                  transform: 'translateY(-3px)',
+                  boxShadow: '0 12px 35px rgba(76, 175, 80, 0.4)'
+                }
+              }}
+            >
+              เพิ่มมอบหมายงาน
+            </Button>
+          </Box>
+        </Zoom>
+      )}
+
+            {/* แสดงตารางมอบหมายงาน - สวยแบบตะโกน */}
+      {isMobile ? (
+        // Mobile View: Card Layout - สวยแบบตะโกน
+        renderMobileAssignmentCards()
+      ) : (
+        // Desktop View: Table Layout - สวยแบบตะโกน
+        <Fade in timeout={1400}>
+          <TableContainer component={Paper} sx={{
+            borderRadius: '20px',
+            boxShadow: '0 15px 35px rgba(0,0,0,0.1)',
+            border: '2px solid rgba(0,0,0,0.05)',
+            overflow: 'hidden'
+          }}>
             <Table>
               <TableHead>
-                <TableRow>
-                  <TableCell sx={{ fontFamily: 'Kanit', fontWeight: 'bold' }}>เวร</TableCell>
-                  <TableCell sx={{ fontFamily: 'Kanit', fontWeight: 'bold' }}>เจ้าหน้าที่</TableCell>
-                  <TableCell sx={{ fontFamily: 'Kanit', fontWeight: 'bold' }}>รายละเอียด</TableCell>
+                <TableRow sx={{
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                }}>
+                  <TableCell sx={{ 
+                    fontFamily: 'Kanit', 
+                    fontWeight: 'bold',
+                    color: 'white',
+                    fontSize: '16px',
+                    borderBottom: 'none'
+                  }}>
+                    เวร
+                  </TableCell>
+                  <TableCell sx={{ 
+                    fontFamily: 'Kanit', 
+                    fontWeight: 'bold',
+                    color: 'white',
+                    fontSize: '16px',
+                    borderBottom: 'none'
+                  }}>
+                    เจ้าหน้าที่
+                  </TableCell>
+                  <TableCell sx={{ 
+                    fontFamily: 'Kanit', 
+                    fontWeight: 'bold',
+                    color: 'white',
+                    fontSize: '16px',
+                    borderBottom: 'none'
+                  }}>
+                    รายละเอียด
+                  </TableCell>
                   {!isReadOnly && (
-                    <TableCell sx={{ fontFamily: 'Kanit', fontWeight: 'bold' }}>การจัดการ</TableCell>
+                    <TableCell sx={{ 
+                      fontFamily: 'Kanit', 
+                      fontWeight: 'bold',
+                      color: 'white',
+                      fontSize: '16px',
+                      borderBottom: 'none'
+                    }}>
+                      การจัดการ
+                    </TableCell>
                   )}
                 </TableRow>
               </TableHead>
               <TableBody>
                 {selectedDateAssignments.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={isReadOnly ? 3 : 4} align="center" sx={{ fontFamily: 'Kanit' }}>
-                      ไม่มีงานที่มอบหมายในวันที่ {formatDate(getSelectedDateString())}
+                    <TableCell colSpan={isReadOnly ? 3 : 4} align="center" sx={{ 
+                      fontFamily: 'Kanit',
+                      fontSize: '18px',
+                      color: '#666',
+                      py: 4
+                    }}>
+                      <Box sx={{ 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        alignItems: 'center', 
+                        gap: 2 
+                      }}>
+                        <AssignmentIcon sx={{ 
+                          fontSize: 48, 
+                          color: '#ccc',
+                          animation: 'float 3s ease-in-out infinite'
+                        }} />
+                        ไม่มีงานที่มอบหมายในวันที่ {formatDate(getSelectedDateString())}
+                      </Box>
                     </TableCell>
                   </TableRow>
                 ) : (
-                  selectedDateAssignments.map((assignment) => {
+                  selectedDateAssignments.map((assignment, index) => {
                     const staff = allStaff.find(s => s.id === assignment.nurseId);
                     const shiftName = SHIFTS.find(s => s.id === assignment.shift)?.name || '';
                     
                     return (
-                      <TableRow key={assignment.id}>
-                        <TableCell sx={{ fontFamily: 'Kanit' }}>
-                          {shiftName}
-                        </TableCell>
-                        <TableCell sx={{ fontFamily: 'Kanit' }}>
-                          {getNurseName(assignment.nurseId)} ({staff?.type === 'nurse' ? 'พยาบาล' : 'ผู้ช่วย'})
-                        </TableCell>
-                        <TableCell sx={{ fontFamily: 'Kanit' }}>
-                          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                            {/* เตียงที่ดูแล */}
-                            {assignment.bedArea && (
-                              <Typography variant="caption" sx={{ fontFamily: 'Kanit' }}>
-                                เตียง: {assignment.bedArea}
-                              </Typography>
-                            )}
-                            {/* หน้าที่ */}
-                            {assignment.duties && assignment.duties.length > 0 && (
-                              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                                {assignment.duties.map((duty) => (
-                                  <Chip key={duty} label={duty} size="small" variant="outlined" />
-                                ))}
-                              </Box>
-                            )}
-                            {/* ดูแลยาเสพติด */}
-                            {assignment.drugSupervision && (
-                              <Chip label="ดูแลยาเสพติด" size="small" color="warning" />
-                            )}
-                            {/* ERT */}
-                            {assignment.ert && (
-                              <Typography variant="caption" sx={{ fontFamily: 'Kanit' }}>
-                                ERT: {assignment.ert}
-                              </Typography>
-                            )}
-                            {/* ทีม */}
-                            {assignment.team && (
-                              <Typography variant="caption" sx={{ fontFamily: 'Kanit' }}>
-                                {assignment.team}
-                              </Typography>
-                            )}
-                          </Box>
-                        </TableCell>
-                        {!isReadOnly && (
-                          <TableCell>
-                            <Box sx={{ display: 'flex', gap: 1 }}>
-                              <Button
-                                size="small"
+                      <Grow in timeout={500 + index * 100} key={assignment.id}>
+                        <TableRow sx={{
+                          '&:hover': {
+                            backgroundColor: 'rgba(102, 126, 234, 0.05)',
+                            transform: 'scale(1.01)',
+                            transition: 'all 0.3s ease'
+                          }
+                        }}>
+                          <TableCell sx={{ 
+                            fontFamily: 'Kanit',
+                            fontWeight: 'bold',
+                            fontSize: '16px'
+                          }}>
+                            <Chip 
+                              label={shiftName} 
+                              sx={{
+                                background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                                color: 'white',
+                                fontWeight: 'bold',
+                                fontSize: '14px',
+                                padding: '8px 16px'
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell sx={{ 
+                            fontFamily: 'Kanit',
+                            fontSize: '16px'
+                          }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <PersonIcon sx={{ color: '#667eea' }} />
+                              {getNurseName(assignment.nurseId)} 
+                              <Chip 
+                                label={staff?.type === 'nurse' ? 'พยาบาล' : 'ผู้ช่วย'} 
+                                size="small" 
                                 variant="outlined"
-                                onClick={() => handleEditAssignment(assignment)}
-                                sx={{ fontFamily: 'Kanit' }}
-                              >
-                                แก้ไข
-                              </Button>
-                              <Button
-                                size="small"
-                                variant="outlined"
-                                color="error"
-                                onClick={() => handleDeleteAssignment(assignment.id)}
-                                sx={{ fontFamily: 'Kanit' }}
-                              >
-                                ลบ
-                              </Button>
+                                sx={{ 
+                                  borderColor: staff?.type === 'nurse' ? '#4caf50' : '#ff9800',
+                                  color: staff?.type === 'nurse' ? '#4caf50' : '#ff9800',
+                                  fontWeight: 'bold'
+                                }}
+                              />
                             </Box>
                           </TableCell>
-                        )}
-                      </TableRow>
+                          <TableCell sx={{ fontFamily: 'Kanit' }}>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                              {/* เตียงที่ดูแล */}
+                              {assignment.bedArea && (
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                  <Typography variant="body2" sx={{ 
+                                    fontFamily: 'Kanit',
+                                    fontWeight: 'bold',
+                                    color: '#667eea'
+                                  }}>
+                                    เตียง:
+                                  </Typography>
+                                  <Chip 
+                                    label={assignment.bedArea} 
+                                    size="small" 
+                                    variant="outlined"
+                                    sx={{ 
+                                      borderColor: '#667eea',
+                                      color: '#667eea',
+                                      fontWeight: 'bold'
+                                    }}
+                                  />
+                                </Box>
+                              )}
+                              {/* หน้าที่ */}
+                              {assignment.duties && assignment.duties.length > 0 && (
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                  {assignment.duties.map((duty) => (
+                                    <Chip 
+                                      key={duty} 
+                                      label={duty} 
+                                      size="small" 
+                                      variant="outlined"
+                                      sx={{ 
+                                        borderColor: '#4caf50',
+                                        color: '#4caf50',
+                                        fontWeight: 'bold'
+                                      }}
+                                    />
+                                  ))}
+                                </Box>
+                              )}
+                              {/* ดูแลยาเสพติด */}
+                              {assignment.drugSupervision && (
+                                <Chip 
+                                  label="ดูแลยาเสพติด" 
+                                  size="small" 
+                                  color="warning"
+                                  sx={{ fontWeight: 'bold' }}
+                                />
+                              )}
+                              {/* ERT */}
+                              {assignment.ert && (
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                  <Typography variant="body2" sx={{ 
+                                    fontFamily: 'Kanit',
+                                    fontWeight: 'bold',
+                                    color: '#ff9800'
+                                  }}>
+                                    ERT:
+                                  </Typography>
+                                  <Chip 
+                                    label={assignment.ert} 
+                                    size="small" 
+                                    variant="outlined"
+                                    sx={{ 
+                                      borderColor: '#ff9800',
+                                      color: '#ff9800',
+                                      fontWeight: 'bold'
+                                    }}
+                                  />
+                                </Box>
+                              )}
+                              {/* ทีม */}
+                              {assignment.team && (
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                  <Typography variant="body2" sx={{ 
+                                    fontFamily: 'Kanit',
+                                    fontWeight: 'bold',
+                                    color: '#9c27b0'
+                                  }}>
+                                    ทีม:
+                                  </Typography>
+                                  <Chip 
+                                    label={assignment.team} 
+                                    size="small" 
+                                    variant="outlined"
+                                    sx={{ 
+                                      borderColor: '#9c27b0',
+                                      color: '#9c27b0',
+                                      fontWeight: 'bold'
+                                    }}
+                                  />
+                                </Box>
+                              )}
+                            </Box>
+                          </TableCell>
+                          {!isReadOnly && (
+                            <TableCell>
+                              <Box sx={{ display: 'flex', gap: 1 }}>
+                                <Button
+                                  size="small"
+                                  variant="outlined"
+                                  startIcon={<EditIcon />}
+                                  onClick={() => handleEditAssignment(assignment)}
+                                  sx={{ 
+                                    fontFamily: 'Kanit',
+                                    fontWeight: 'bold',
+                                    borderColor: '#2196f3',
+                                    color: '#2196f3',
+                                    '&:hover': {
+                                      backgroundColor: '#2196f3',
+                                      color: 'white',
+                                      transform: 'translateY(-2px)',
+                                      boxShadow: '0 4px 15px rgba(33, 150, 243, 0.3)'
+                                    },
+                                    transition: 'all 0.3s ease'
+                                  }}
+                                >
+                                  แก้ไข
+                                </Button>
+                                <Button
+                                  size="small"
+                                  variant="outlined"
+                                  startIcon={<DeleteIcon />}
+                                  color="error"
+                                  onClick={() => handleDeleteAssignment(assignment.id)}
+                                  sx={{ 
+                                    fontFamily: 'Kanit',
+                                    fontWeight: 'bold',
+                                    '&:hover': {
+                                      transform: 'translateY(-2px)',
+                                      boxShadow: '0 4px 15px rgba(244, 67, 54, 0.3)'
+                                    },
+                                    transition: 'all 0.3s ease'
+                                  }}
+                                >
+                                  ลบ
+                                </Button>
+                              </Box>
+                            </TableCell>
+                          )}
+                        </TableRow>
+                      </Grow>
                     );
                   })
                 )}
               </TableBody>
             </Table>
           </TableContainer>
-        )
-      ) : (
-        // โหมดรายบุคคล - แสดงปฏิทิน
-        <Box>
-          <Typography variant="h5" sx={{ fontFamily: 'Kanit', mb: 2, textAlign: 'center' }}>
-            ตารางมอบหมายงานของ {getNurseName(currentStaffId)} - {format(new Date(Number(selectedYear), Number(selectedMonth) - 1), 'MMMM yyyy', { locale: th })}
-          </Typography>
-          
-          <Grid container spacing={1}>
-            {Array.from({ length: getDaysInMonth(Number(selectedYear), Number(selectedMonth)) }, (_, i) => {
-              const day = i + 1;
-              const dateStr = `${selectedYear}-${selectedMonth.padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-              const date = new Date(Number(selectedYear), Number(selectedMonth) - 1, day);
-              const dayName = getDayName(date);
-              const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-              
-              // ดึงงานที่ได้รับมอบหมายสำหรับเจ้าหน้าที่นี้ในวันนี้
-              const dayAssignments = getAssignmentsForStaff(currentStaffId, dateStr);
-              
-              return (
-                <Grid item 
-                  xs={isMobile && isLandscape ? 3 : 6} 
-                  sm={4} 
-                  md={3} 
-                  lg={isMobile ? 3 : 2} 
-                  key={day}
-                >
-                  <Card 
-                    sx={{ 
-                      height: isMobile ? (isLandscape ? 120 : 140) : 160,
-                      backgroundColor: isWeekend ? '#ffebee' : '#ffffff',
-                      border: '1px solid #e0e0e0',
-                      '&:hover': { backgroundColor: isWeekend ? '#ffcdd2' : '#f5f5f5' }
-                    }}
-                  >
-                    <CardContent sx={{ p: 1, textAlign: 'center' }}>
-                      <Typography variant="h6" sx={{ 
-                        fontFamily: 'Kanit', 
-                        fontSize: isMobile && isLandscape ? '1rem' : '1.1rem'
-                      }}>
-                        {day}
-                      </Typography>
-                      <Typography variant="caption" sx={{ 
-                        fontFamily: 'Kanit', 
-                        color: isWeekend ? '#d32f2f' : '#666',
-                        fontSize: isMobile && isLandscape ? '0.65rem' : '0.75rem'
-                      }}>
-                        {dayName}
-                      </Typography>
-                      
-                      {/* แสดงงานที่ได้รับมอบหมาย */}
-                      {dayAssignments.length > 0 ? (
-                        <Box sx={{ mt: 0.5, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                          {dayAssignments.map((assignment, index) => (
-                            <Box key={assignment.id} sx={{ display: 'flex', flexDirection: 'column', gap: 0.2 }}>
-                              {/* เวร */}
-                              <Chip
-                                label={SHIFTS.find(s => s.id === assignment.shift)?.name || ''}
-                                size="small"
-                                sx={{ 
-                                  fontFamily: 'Kanit',
-                                  backgroundColor: '#e3f2fd',
-                                  color: '#1976d2',
-                                  fontSize: isMobile && isLandscape ? '0.5rem' : '0.6rem',
-                                  height: isMobile && isLandscape ? '14px' : '16px',
-                                  mb: 0.2
-                                }}
-                              />
-                              
-                              {/* เตียง */}
-                              {assignment.bedArea && (
-                                <Chip
-                                  label={assignment.bedArea}
-                                  size="small"
-                                  sx={{ 
-                                    fontFamily: 'Kanit',
-                                    backgroundColor: '#fff3e0',
-                                    color: '#e65100',
-                                    fontSize: isMobile && isLandscape ? '0.45rem' : '0.5rem',
-                                    height: isMobile && isLandscape ? '12px' : '14px'
-                                  }}
-                                />
-                              )}
-                              
-                              {/* หน้าที่ */}
-                              {assignment.duties && assignment.duties.length > 0 && (
-                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.2 }}>
-                                  {assignment.duties.map((duty, dutyIndex) => (
-                                    <Chip
-                                      key={dutyIndex}
-                                      label={duty}
-                                      size="small"
-                                      sx={{ 
-                                        fontFamily: 'Kanit',
-                                        backgroundColor: '#f3e5f5',
-                                        color: '#7b1fa2',
-                                        fontSize: isMobile && isLandscape ? '0.4rem' : '0.5rem',
-                                        height: isMobile && isLandscape ? '12px' : '14px'
-                                      }}
-                                    />
-                                  ))}
-                                </Box>
-                              )}
-                              
-                              {/* ERT */}
-                              {assignment.ert && (
-                                <Chip
-                                  label={`ERT: ${assignment.ert}`}
-                                  size="small"
-                                  sx={{ 
-                                    fontFamily: 'Kanit',
-                                    backgroundColor: '#e8f5e8',
-                                    color: '#2e7d32',
-                                    fontSize: '0.5rem',
-                                    height: '14px'
-                                  }}
-                                />
-                              )}
-                              
-                              {/* ยาเสพติด */}
-                              {assignment.drugSupervision && (
-                                <Chip
-                                  label="ยาเสพติด"
-                                  size="small"
-                                  sx={{ 
-                                    fontFamily: 'Kanit',
-                                    backgroundColor: '#ffebee',
-                                    color: '#c62828',
-                                    fontSize: '0.5rem',
-                                    height: '14px'
-                                  }}
-                                />
-                              )}
-                              
-                              {/* ทีม */}
-                              {assignment.team && (
-                                <Chip
-                                  label={assignment.team}
-                                  size="small"
-                                  sx={{ 
-                                    fontFamily: 'Kanit',
-                                    backgroundColor: '#e0f2f1',
-                                    color: '#00695c',
-                                    fontSize: '0.5rem',
-                                    height: '14px'
-                                  }}
-                                />
-                              )}
-                            </Box>
-                          ))}
-                        </Box>
-                      ) : (
-                        <Typography variant="caption" sx={{ fontFamily: 'Kanit', color: '#999', mt: 0.5 }}>
-                          ไม่มีงาน
-                        </Typography>
-                      )}
-                    </CardContent>
-                  </Card>
-                </Grid>
-              );
-            })}
-          </Grid>
-        </Box>
+        </Fade>
       )}
 
-      {/* Dialog for adding/editing assignment */}
-      <Dialog open={isDialogOpen} onClose={handleCloseDialog} maxWidth="md" fullWidth>
-        <DialogTitle sx={{ fontFamily: 'Kanit' }}>
+      {/* Dialog for adding/editing assignment - สวยแบบตะโกน */}
+      <Dialog 
+        open={isDialogOpen} 
+        onClose={handleCloseDialog} 
+        maxWidth="md" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: '20px',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+            border: '2px solid rgba(102, 126, 234, 0.1)'
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          fontFamily: 'Kanit',
+          fontWeight: 'bold',
+          fontSize: '20px',
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          color: 'white',
+          textAlign: 'center'
+        }}>
           {selectedAssignment ? 'แก้ไขงานที่มอบหมาย' : 'เพิ่มงานที่มอบหมาย'}
         </DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+        <DialogContent sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2 }}>
             {/* 1. วันที่ */}
             <TextField
               fullWidth
@@ -1058,13 +1233,26 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
               type="date"
               value={editingAssignment.date || getSelectedDateString()}
               onChange={(e) => setEditingAssignment({ ...editingAssignment, date: e.target.value })}
-              InputLabelProps={{ sx: { fontFamily: 'Kanit' } }}
-              sx={{ fontFamily: 'Kanit' }}
+              InputLabelProps={{ sx: { fontFamily: 'Kanit', fontWeight: 'bold' } }}
+              sx={{ 
+                fontFamily: 'Kanit',
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '15px',
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+                  },
+                  '&.Mui-focused': {
+                    boxShadow: '0 4px 15px rgba(102, 126, 234, 0.2)'
+                  }
+                },
+                transition: 'all 0.3s ease'
+              }}
             />
             
             {/* 2. เวร */}
             <FormControl fullWidth>
-              <InputLabel sx={{ fontFamily: 'Kanit' }}>เวร</InputLabel>
+              <InputLabel sx={{ fontFamily: 'Kanit', fontWeight: 'bold' }}>เวร</InputLabel>
               <Select
                 value={editingAssignment.shift || ''}
                 label="เวร"
@@ -1078,7 +1266,20 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
                   // เริ่มต้นข้อมูลสำหรับทุกคนในเวร
                   initializeShiftAssignments(selectedShift, editingAssignment.date || getSelectedDateString());
                 }}
-                sx={{ fontFamily: 'Kanit' }}
+                sx={{ 
+                  fontFamily: 'Kanit',
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '15px',
+                    '&:hover': {
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+                    },
+                    '&.Mui-focused': {
+                      boxShadow: '0 4px 15px rgba(102, 126, 234, 0.2)'
+                    }
+                  },
+                  transition: 'all 0.3s ease'
+                }}
               >
                 {SHIFTS.map((shift) => (
                   <MenuItem key={shift.id} value={shift.id} sx={{ fontFamily: 'Kanit' }}>
@@ -1091,25 +1292,83 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
             {/* 3. ตารางมอบหมายงานสำหรับทุกคนในเวร */}
             {editingAssignment.shift && editingAssignment.date && (
               <Box sx={{ mt: 2 }}>
-                <Typography variant="h6" sx={{ fontFamily: 'Kanit', mb: 2 }}>
+                <Typography variant="h6" sx={{ 
+                  fontFamily: 'Kanit', 
+                  mb: 2,
+                  fontWeight: 'bold',
+                  color: '#667eea'
+                }}>
                   มอบหมายงานสำหรับเวร{SHIFTS.find(s => s.id === editingAssignment.shift)?.name}
                 </Typography>
                 
-                <TableContainer component={Paper} sx={{ maxHeight: 400 }}>
+                <TableContainer component={Paper} sx={{ 
+                  maxHeight: 400,
+                  borderRadius: '15px',
+                  boxShadow: '0 8px 25px rgba(0,0,0,0.1)',
+                  border: '2px solid rgba(0,0,0,0.05)'
+                }}>
                   <Table stickyHeader size="small">
                     <TableHead>
-                      <TableRow>
-                        <TableCell sx={{ fontFamily: 'Kanit', fontWeight: 'bold' }}>ชื่อเจ้าหน้าที่</TableCell>
-                        <TableCell sx={{ fontFamily: 'Kanit', fontWeight: 'bold' }}>เตียง</TableCell>
-                        <TableCell sx={{ fontFamily: 'Kanit', fontWeight: 'bold' }}>หน้าที่</TableCell>
-                        <TableCell sx={{ fontFamily: 'Kanit', fontWeight: 'bold' }}>ERT</TableCell>
-                        <TableCell sx={{ fontFamily: 'Kanit', fontWeight: 'bold' }}>ยาเสพติด</TableCell>
-                        <TableCell sx={{ fontFamily: 'Kanit', fontWeight: 'bold' }}>ทีม</TableCell>
+                      <TableRow sx={{
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                      }}>
+                        <TableCell sx={{ 
+                          fontFamily: 'Kanit', 
+                          fontWeight: 'bold',
+                          color: 'white',
+                          borderBottom: 'none'
+                        }}>
+                          ชื่อเจ้าหน้าที่
+                        </TableCell>
+                        <TableCell sx={{ 
+                          fontFamily: 'Kanit', 
+                          fontWeight: 'bold',
+                          color: 'white',
+                          borderBottom: 'none'
+                        }}>
+                          เตียง
+                        </TableCell>
+                        <TableCell sx={{ 
+                          fontFamily: 'Kanit', 
+                          fontWeight: 'bold',
+                          color: 'white',
+                          borderBottom: 'none'
+                        }}>
+                          หน้าที่
+                        </TableCell>
+                        <TableCell sx={{ 
+                          fontFamily: 'Kanit', 
+                          fontWeight: 'bold',
+                          color: 'white',
+                          borderBottom: 'none'
+                        }}>
+                          ERT
+                        </TableCell>
+                        <TableCell sx={{ 
+                          fontFamily: 'Kanit', 
+                          fontWeight: 'bold',
+                          color: 'white',
+                          borderBottom: 'none'
+                        }}>
+                          ยาเสพติด
+                        </TableCell>
+                        <TableCell sx={{ 
+                          fontFamily: 'Kanit', 
+                          fontWeight: 'bold',
+                          color: 'white',
+                          borderBottom: 'none'
+                        }}>
+                          ทีม
+                        </TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
                       {getStaffByShift(editingAssignment.shift || '', editingAssignment.date || '').map((staff) => (
-                        <TableRow key={staff.id}>
+                        <TableRow key={staff.id} sx={{
+                          '&:hover': {
+                            backgroundColor: 'rgba(102, 126, 234, 0.05)'
+                          }
+                        }}>
                           <TableCell sx={{ fontFamily: 'Kanit' }}>
                             {staff.name} ({staff.type === 'nurse' ? 'พยาบาล' : 'ผู้ช่วย'})
                           </TableCell>
@@ -1121,7 +1380,13 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
                                 size="small"
                                 value={getStaffAssignment(staff.id, 'bedArea')}
                                 onChange={(e) => updateStaffAssignment(staff.id, 'bedArea', e.target.value)}
-                                sx={{ fontFamily: 'Kanit', minWidth: 100 }}
+                                sx={{ 
+                                  fontFamily: 'Kanit', 
+                                  minWidth: 100,
+                                  '& .MuiOutlinedInput-root': {
+                                    borderRadius: '10px'
+                                  }
+                                }}
                               >
                                 <MenuItem value="">-</MenuItem>
                                 {BED_AREAS.map((area) => (
@@ -1151,7 +1416,13 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
                                     ))}
                                   </Box>
                                 )}
-                                sx={{ fontFamily: 'Kanit', minWidth: 150 }}
+                                sx={{ 
+                                  fontFamily: 'Kanit', 
+                                  minWidth: 150,
+                                  '& .MuiOutlinedInput-root': {
+                                    borderRadius: '10px'
+                                  }
+                                }}
                               >
                                 {DUTIES.map((duty) => (
                                   <MenuItem key={duty} value={duty} sx={{ fontFamily: 'Kanit' }}>
@@ -1172,7 +1443,13 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
                               size="small"
                               value={getStaffAssignment(staff.id, 'ert')}
                               onChange={(e) => updateStaffAssignment(staff.id, 'ert', e.target.value)}
-                              sx={{ fontFamily: 'Kanit', minWidth: 120 }}
+                              sx={{ 
+                                fontFamily: 'Kanit', 
+                                minWidth: 120,
+                                '& .MuiOutlinedInput-root': {
+                                  borderRadius: '10px'
+                                }
+                              }}
                             >
                               <MenuItem value="">-</MenuItem>
                               {ERT_ROLES.map((role) => (
@@ -1189,6 +1466,11 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
                               <Checkbox
                                 checked={getStaffAssignment(staff.id, 'drugSupervision') as boolean}
                                 onChange={(e) => updateStaffAssignment(staff.id, 'drugSupervision', e.target.checked)}
+                                sx={{
+                                  '&.Mui-checked': {
+                                    color: '#ff9800'
+                                  }
+                                }}
                               />
                             ) : '-'}
                           </TableCell>
@@ -1200,7 +1482,13 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
                                 size="small"
                                 value={getStaffAssignment(staff.id, 'team')}
                                 onChange={(e) => updateStaffAssignment(staff.id, 'team', e.target.value)}
-                                sx={{ fontFamily: 'Kanit', minWidth: 80 }}
+                                sx={{ 
+                                  fontFamily: 'Kanit', 
+                                  minWidth: 80,
+                                  '& .MuiOutlinedInput-root': {
+                                    borderRadius: '10px'
+                                  }
+                                }}
                               >
                                 <MenuItem value="">-</MenuItem>
                                 {TEAMS.map((team) => (
@@ -1220,15 +1508,53 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
             )}
           </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog} sx={{ fontFamily: 'Kanit' }}>
+        <DialogActions sx={{ p: 3, gap: 2 }}>
+          <Button 
+            onClick={handleCloseDialog} 
+            sx={{ 
+              fontFamily: 'Kanit',
+              fontWeight: 'bold',
+              borderRadius: '15px',
+              px: 3,
+              py: 1.5,
+              border: '2px solid #9e9e9e',
+              color: '#616161',
+              '&:hover': {
+                border: '2px solid #757575',
+                backgroundColor: 'rgba(158, 158, 158, 0.04)',
+                transform: 'translateY(-2px)',
+                boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+              },
+              transition: 'all 0.3s ease'
+            }}
+          >
             ยกเลิก
           </Button>
           <Button 
             onClick={handleSaveAssignment} 
             variant="contained" 
             disabled={!editingAssignment.date || !editingAssignment.shift}
-            sx={{ fontFamily: 'Kanit' }}
+            startIcon={<SaveIcon />}
+            sx={{ 
+              fontFamily: 'Kanit',
+              fontWeight: 'bold',
+              borderRadius: '15px',
+              px: 3,
+              py: 1.5,
+              background: 'linear-gradient(135deg, #4caf50, #66bb6a)',
+              boxShadow: '0 4px 15px rgba(76, 175, 80, 0.3)',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #43a047, #4caf50)',
+                transform: 'translateY(-2px)',
+                boxShadow: '0 6px 20px rgba(76, 175, 80, 0.4)',
+              },
+              transition: 'all 0.3s ease',
+              '&:disabled': {
+                background: '#ccc',
+                transform: 'none',
+                boxShadow: 'none'
+              }
+            }}
           >
             บันทึก
           </Button>
