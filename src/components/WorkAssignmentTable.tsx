@@ -52,6 +52,7 @@ import { format } from 'date-fns';
 import { th } from 'date-fns/locale';
 import { WorkAssignment, ScheduleEntry } from '../types';
 import { allStaff } from '../data/nurses';
+import { saveAssignmentsDraft, loadAssignmentsDraft } from '../services/dataService';
 
 // ข้อมูลอ้างอิง
 const SHIFTS = [
@@ -127,12 +128,17 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
   const [selectedMonth, setSelectedMonth] = useState(month.toString());
   const [selectedDay, setSelectedDay] = useState('1');
   
-
-
   // Get current date for default selection
   const currentDate = new Date();
   const defaultYear = currentDate.getFullYear();
   const defaultDay = currentDate.getDate();
+
+  // Get selected date string
+  const getSelectedDateString = () => {
+    const monthStr = selectedMonth.padStart(2, '0');
+    const dayStr = selectedDay.padStart(2, '0');
+    return `${selectedYear}-${monthStr}-${dayStr}`;
+  };
 
   // Initialize with current date if not provided
   React.useEffect(() => {
@@ -143,12 +149,31 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
     }
   }, [year, month, defaultDay]);
 
-  // Get selected date string
-  const getSelectedDateString = () => {
-    const monthStr = selectedMonth.padStart(2, '0');
-    const dayStr = selectedDay.padStart(2, '0');
-    return `${selectedYear}-${monthStr}-${dayStr}`;
-  };
+  // Load assignments from Firebase when component mounts or date changes
+  React.useEffect(() => {
+    const loadAssignmentsFromFirebase = async () => {
+      try {
+        const firebaseData = await loadAssignmentsDraft();
+        
+        if (firebaseData && firebaseData.assignments && firebaseData.assignments.length > 0) {
+          // Filter assignments for the selected date
+          const selectedDate = getSelectedDateString();
+          const dateAssignments = firebaseData.assignments.filter(a => a.date === selectedDate);
+          
+          if (dateAssignments.length > 0) {
+            // Update parent component with data from Firebase
+            onAssignmentChange(dateAssignments);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading assignments from Firebase:', error);
+      }
+    };
+
+    if (!isReadOnly) {
+      loadAssignmentsFromFirebase();
+    }
+  }, [getSelectedDateString, isReadOnly, onAssignmentChange]);
 
   // Get assignments for selected date
   const getAssignmentsForSelectedDate = () => {
@@ -186,42 +211,52 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
     initializeShiftAssignments(assignment.date);
   };
 
-  const handleSaveAssignment = () => {
+  const handleSaveAssignment = async () => {
     if (!editingAssignment.date) {
       return;
     }
 
-    let newAssignments = [...assignments];
-    
-    // ลบข้อมูลเก่าของวันที่นี้ก่อน
-    newAssignments = newAssignments.filter(a => a.date !== editingAssignment.date);
+    try {
+      let newAssignments = [...assignments];
+      
+      // ลบข้อมูลเก่าของวันที่นี้ก่อน
+      newAssignments = newAssignments.filter(a => a.date !== editingAssignment.date);
 
-    // เพิ่มข้อมูลใหม่สำหรับทุกคนในทุกเวร
-    SHIFTS.forEach(shift => {
-      const staffInShift = getStaffByShift(shift.id, editingAssignment.date || '');
-      staffInShift.forEach(staff => {
-        const staffAssignment = shiftAssignments[`${staff.id}_${shift.id}`] || {};
-        if (staffAssignment.nurseId) {
-          const newAssignment: WorkAssignment = {
-            id: Date.now().toString() + Math.random().toString(),
-            date: staffAssignment.date!,
-            shift: shift.id,
-            nurseId: staffAssignment.nurseId!,
-            bedArea: staffAssignment.bedArea,
-            duties: staffAssignment.duties,
-            drugSupervision: staffAssignment.drugSupervision,
-            ert: staffAssignment.ert,
-            team: staffAssignment.team,
-            assignment: '', // เซ็ตเป็นค่าว่าง
-            notes: '',
-          };
-          newAssignments.push(newAssignment);
-        }
+      // เพิ่มข้อมูลใหม่สำหรับทุกคนในทุกเวร
+      SHIFTS.forEach(shift => {
+        const staffInShift = getStaffByShift(shift.id, editingAssignment.date || '');
+        staffInShift.forEach(staff => {
+          const staffAssignment = shiftAssignments[`${staff.id}_${shift.id}`] || {};
+          if (staffAssignment.nurseId) {
+            const newAssignment: WorkAssignment = {
+              id: Date.now().toString() + Math.random().toString(),
+              date: staffAssignment.date!,
+              shift: shift.id,
+              nurseId: staffAssignment.nurseId!,
+              bedArea: staffAssignment.bedArea,
+              duties: staffAssignment.duties,
+              drugSupervision: staffAssignment.drugSupervision,
+              ert: staffAssignment.ert,
+              team: staffAssignment.team,
+              assignment: '',
+              notes: '',
+            };
+            newAssignments.push(newAssignment);
+          }
+        });
       });
-    });
 
-    onAssignmentChange(newAssignments);
-    handleCloseDialog();
+      // Update parent component
+      onAssignmentChange(newAssignments);
+      
+      // Save to Firebase immediately
+      await saveAssignmentsDraft(newAssignments);
+      
+      handleCloseDialog();
+    } catch (error) {
+      console.error('Error saving assignment:', error);
+      // You might want to show an error message to the user here
+    }
   };
 
   const handleDeleteAssignment = (id: string) => {
@@ -329,34 +364,75 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
   };
 
   // เริ่มต้นข้อมูลสำหรับทุกคนในทุกเวร
-  const initializeShiftAssignments = (date: string) => {
-    const initialAssignments: { [staffId: string]: Partial<WorkAssignment> } = {};
-    
-    SHIFTS.forEach(shift => {
-      const staffInShift = getStaffByShift(shift.id, date);
-      staffInShift.forEach(staff => {
-        const key = `${staff.id}_${shift.id}`;
-        // ตรวจสอบว่ามีข้อมูลเดิมอยู่แล้วหรือไม่
-        const existingAssignment = assignments.find(a => 
-          a.nurseId === staff.id && a.date === date && a.shift === shift.id
-        );
-        
-        initialAssignments[key] = existingAssignment || {
-          date,
-          shift: shift.id,
-          nurseId: staff.id,
-          bedArea: '',
-          duties: [],
-          drugSupervision: false,
-          ert: '',
-          team: '',
-          assignment: '',
-          notes: ''
-        };
+  const initializeShiftAssignments = async (date: string) => {
+    try {
+      // Try to load existing assignments from Firebase first
+      const firebaseData = await loadAssignmentsDraft();
+      const existingAssignments = firebaseData?.assignments || [];
+      
+      const initialAssignments: { [staffId: string]: Partial<WorkAssignment> } = {};
+      
+      SHIFTS.forEach(shift => {
+        const staffInShift = getStaffByShift(shift.id, date);
+        staffInShift.forEach(staff => {
+          const key = `${staff.id}_${shift.id}`;
+          
+          // Check if we have existing data from Firebase
+          const existingAssignment = existingAssignments.find((a: WorkAssignment) => 
+            a.nurseId === staff.id && a.date === date && a.shift === shift.id
+          );
+          
+          // If no existing data from Firebase, check local state
+          const localAssignment = assignments.find(a => 
+            a.nurseId === staff.id && a.date === date && a.shift === shift.id
+          );
+          
+          initialAssignments[key] = existingAssignment || localAssignment || {
+            date,
+            shift: shift.id,
+            nurseId: staff.id,
+            bedArea: '',
+            duties: [],
+            drugSupervision: false,
+            ert: '',
+            team: '',
+            assignment: '',
+            notes: ''
+          };
+        });
       });
-    });
-    
-    setShiftAssignments(initialAssignments);
+      
+      setShiftAssignments(initialAssignments);
+    } catch (error) {
+      console.error('Error initializing shift assignments:', error);
+      // Fallback to local state if Firebase fails
+      const initialAssignments: { [staffId: string]: Partial<WorkAssignment> } = {};
+      
+      SHIFTS.forEach(shift => {
+        const staffInShift = getStaffByShift(shift.id, date);
+        staffInShift.forEach(staff => {
+          const key = `${staff.id}_${shift.id}`;
+          const existingAssignment = assignments.find(a => 
+            a.nurseId === staff.id && a.date === date && a.shift === shift.id
+          );
+          
+          initialAssignments[key] = existingAssignment || {
+            date,
+            shift: shift.id,
+            nurseId: staff.id,
+            bedArea: '',
+            duties: [],
+            drugSupervision: false,
+            ert: '',
+            team: '',
+            assignment: '',
+            notes: ''
+          };
+        });
+      });
+      
+      setShiftAssignments(initialAssignments);
+    }
   };
 
   // ดึงข้อมูลมอบหมายของเจ้าหน้าที่
@@ -633,14 +709,22 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
                         {/* ทีม */}
                         {assignment.team && (
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Typography variant="body2" sx={{ fontFamily: 'Kanit', fontWeight: 'bold', minWidth: '60px' }}>
+                            <Typography variant="body2" sx={{ 
+                              fontFamily: 'Kanit',
+                              fontWeight: 'bold',
+                              color: '#9c27b0'
+                            }}>
                               ทีม:
                             </Typography>
                             <Chip 
                               label={assignment.team} 
                               size="small" 
-                              color="info" 
                               variant="outlined"
+                              sx={{ 
+                                borderColor: '#9c27b0',
+                                color: '#9c27b0',
+                                fontWeight: 'bold'
+                              }}
                             />
                           </Box>
                         )}
@@ -1595,6 +1679,17 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
                                   }}>
                                     หน้าที่ ERT
                                   </TableCell>
+                                  <TableCell sx={{ 
+                                    fontFamily: 'Kanit', 
+                                    fontWeight: 'bold',
+                                    color: '#333',
+                                    borderBottom: '2px solid #e0e0e0',
+                                    textAlign: 'center',
+                                    minWidth: 80,
+                                    backgroundColor: '#f8f9fa'
+                                  }}>
+                                    ทีม
+                                  </TableCell>
                                 </>
                               ) : (
                                 <>
@@ -1754,6 +1849,28 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
                                         {ERT_ROLES.map((role) => (
                                           <MenuItem key={role} value={role} sx={{ fontFamily: 'Kanit' }}>
                                             {role}
+                                          </MenuItem>
+                                        ))}
+                                      </Select>
+                                    </TableCell>
+                                    {/* ทีม (ทุกคน) */}
+                                    <TableCell sx={{ textAlign: 'center' }}>
+                                      <Select
+                                        size="small"
+                                        value={getStaffAssignment(staff.id, 'team', shift.id)}
+                                        onChange={(e) => updateStaffAssignment(staff.id, 'team', e.target.value, shift.id)}
+                                        sx={{ 
+                                          fontFamily: 'Kanit', 
+                                          minWidth: 80,
+                                          '& .MuiOutlinedInput-root': {
+                                            borderRadius: '10px'
+                                          }
+                                        }}
+                                      >
+                                        <MenuItem value="">-</MenuItem>
+                                        {TEAMS.map((team) => (
+                                          <MenuItem key={team} value={team} sx={{ fontFamily: 'Kanit' }}>
+                                            {team}
                                           </MenuItem>
                                         ))}
                                       </Select>
