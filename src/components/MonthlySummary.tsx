@@ -389,19 +389,17 @@ const MonthlySummary: React.FC<MonthlySummaryProps> = ({
           >
             📊
           </Box>
-          <Typography
-            variant="h5"
-            sx={{
-              background: 'linear-gradient(45deg, #ff6b6b, #4ecdc4)',
+          <Typography variant="h4" sx={{ 
+              fontFamily: 'Kanit',
+              fontWeight: 'bold',
               backgroundClip: 'text',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
-              fontWeight: 'bold',
-              textShadow: '0 2px 4px rgba(0,0,0,0.1)'
-            }}
-          >
-            สรุปวันทำการประจำเดือน
-          </Typography>
+              textAlign: 'center',
+              mb: 3
+            }}>
+              สรุปประจำเดือน {format(new Date(year, month - 1), 'MMMM yyyy', { locale: th })}
+            </Typography>
         </Box>
 
         <Grid container spacing={3}>

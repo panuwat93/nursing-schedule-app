@@ -64,7 +64,6 @@ const MonthSelector: React.FC<MonthSelectorProps> = ({
         </Box>
         <Typography variant="h6" sx={{ 
           fontFamily: 'Kanit',
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
           backgroundClip: 'text',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
@@ -155,13 +154,16 @@ const MonthSelector: React.FC<MonthSelectorProps> = ({
             border: '1px solid rgba(102, 126, 234, 0.1)',
             boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
           }}>
-            <Typography variant="body1" sx={{ 
+            <Typography variant="h4" sx={{ 
               fontFamily: 'Kanit', 
-              color: '#495057',
-              fontWeight: 600,
-              textAlign: 'center'
+              fontWeight: 'bold',
+              backgroundClip: 'text',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              textAlign: 'center',
+              mb: 2
             }}>
-              📊 ตารางเวรประจำเดือน {format(new Date(year, month - 1), 'MMMM yyyy', { locale: th })}
+              {format(new Date(Number(year), Number(month) - 1, 1), 'MMMM yyyy', { locale: th })}
             </Typography>
           </Box>
         </Grid>

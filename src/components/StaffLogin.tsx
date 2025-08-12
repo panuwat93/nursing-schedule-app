@@ -173,22 +173,16 @@ const StaffLogin: React.FC<StaffLoginProps> = ({
             </Zoom>
             
             <Grow in timeout={1200}>
-              <Typography
-                variant="h3"
-                sx={{
-                  fontFamily: 'Kanit',
-                  textAlign: 'center',
-                  mb: 2,
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  backgroundClip: 'text',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  fontWeight: 800,
-                  fontSize: { xs: '2rem', md: '2.5rem' },
-                  textShadow: '0 2px 10px rgba(0,0,0,0.1)',
-                }}
-              >
-                เข้าสู่ระบบ
+              <Typography variant="h4" sx={{ 
+                fontFamily: 'Kanit',
+                fontWeight: 'bold',
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                textAlign: 'center',
+                mb: 3
+              }}>
+                เข้าสู่ระบบเจ้าหน้าที่
               </Typography>
             </Grow>
 

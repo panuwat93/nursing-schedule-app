@@ -249,7 +249,6 @@ const PersonalCalendar: React.FC<PersonalCalendarProps> = ({
                 <Typography variant="h5" sx={{ 
                   fontFamily: 'Kanit', 
                   fontWeight: 'bold',
-                  background: 'linear-gradient(45deg, #667eea, #764ba2)',
                   backgroundClip: 'text',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',

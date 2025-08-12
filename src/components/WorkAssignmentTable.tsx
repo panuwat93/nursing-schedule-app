@@ -167,11 +167,15 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
         }
       } catch (error) {
         console.error('Error loading assignments from Firebase:', error);
+        // Don't throw error, just log it
       }
     };
 
     if (!isReadOnly) {
-      loadAssignmentsFromFirebase();
+      // Wrap in try-catch to prevent unhandled promise rejection
+      loadAssignmentsFromFirebase().catch(error => {
+        console.error('Unhandled error in loadAssignmentsFromFirebase:', error);
+      });
     }
   }, [getSelectedDateString, isReadOnly, onAssignmentChange]);
 
@@ -255,6 +259,7 @@ const WorkAssignmentTable: React.FC<WorkAssignmentTableProps> = ({
       handleCloseDialog();
     } catch (error) {
       console.error('Error saving assignment:', error);
+      // Show error to user but don't crash the app
       // You might want to show an error message to the user here
     }
   };

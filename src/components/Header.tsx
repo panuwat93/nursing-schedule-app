@@ -175,7 +175,6 @@ const Header: React.FC<HeaderProps> = ({
                 sx={{ 
                   fontFamily: 'Kanit',
                   fontWeight: 700,
-                  background: 'linear-gradient(45deg, #ffffff, #f0f8ff)',
                   backgroundClip: 'text',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',

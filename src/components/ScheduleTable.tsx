@@ -1648,15 +1648,14 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({
           }}>
             📅
           </Box>
-          <Typography variant="h5" sx={{ 
-            fontFamily: 'Kanit', 
-            flex: 1,
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          <Typography variant="h4" sx={{ 
+            fontFamily: 'Kanit',
+            fontWeight: 'bold',
             backgroundClip: 'text',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
-            fontWeight: 700,
-            textShadow: '0 2px 10px rgba(0,0,0,0.1)'
+            textAlign: 'center',
+            mb: 3
           }}>
             ตารางเวรประจำเดือน {format(new Date(year, month - 1), 'MMMM yyyy', { locale: th })}
           </Typography>

@@ -147,22 +147,16 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin, onBackToLogin, error }
               </Zoom>
               
               <Grow in timeout={1200}>
-                <Typography
-                  variant="h3"
-                  sx={{
-                    fontFamily: 'Kanit',
-                    textAlign: 'center',
-                    mb: 2,
-                    background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
-                    backgroundClip: 'text',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    fontWeight: 800,
-                    fontSize: { xs: '1.8rem', md: '2.2rem' },
-                    textShadow: '0 2px 10px rgba(0,0,0,0.1)',
-                  }}
-                >
-                  เข้าสู่ระบบ ADMIN
+                <Typography variant="h4" sx={{ 
+                  fontFamily: 'Kanit',
+                  fontWeight: 'bold',
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  textAlign: 'center',
+                  mb: 3
+                }}>
+                  เข้าสู่ระบบผู้ดูแล
                 </Typography>
               </Grow>
 

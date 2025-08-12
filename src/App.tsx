@@ -463,7 +463,6 @@ const App: React.FC = () => {
                 <h2 style={{ 
                   fontFamily: 'Kanit', 
                   margin: 0,
-                  background: 'linear-gradient(45deg, #1976d2, #42a5f5)',
                   backgroundClip: 'text',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
@@ -616,7 +615,6 @@ const App: React.FC = () => {
                 <h2 style={{ 
                   fontFamily: 'Kanit', 
                   margin: 0,
-                  background: 'linear-gradient(45deg, #e65100, #ff6f00)',
                   backgroundClip: 'text',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
@@ -732,7 +730,6 @@ const App: React.FC = () => {
                 <h2 style={{ 
                   fontFamily: 'Kanit', 
                   margin: 0,
-                  background: 'linear-gradient(45deg, #f57c00, #ff9800)',
                   backgroundClip: 'text',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',

@@ -57,21 +57,38 @@ if ('serviceWorker' in navigator) {
 // Handle app installation prompt
 let deferredPrompt: any;
 window.addEventListener('beforeinstallprompt', (e) => {
+  // Prevent the default behavior to avoid the error
   e.preventDefault();
   deferredPrompt = e;
   
-  // Show install button or banner
+  // Store the event for later use
+  console.log('Install prompt captured and stored');
+  
+  // Show install button or banner if available
   const installButton = document.getElementById('install-button');
   if (installButton) {
     installButton.style.display = 'block';
     installButton.addEventListener('click', () => {
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice.then((choiceResult: any) => {
-        if (choiceResult.outcome === 'accepted') {
-          console.log('User accepted the install prompt');
-        }
-        deferredPrompt = null;
-      });
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult: any) => {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('User accepted the install prompt');
+          } else {
+            console.log('User dismissed the install prompt');
+          }
+          deferredPrompt = null;
+        }).catch((error: any) => {
+          console.error('Error handling install prompt:', error);
+          deferredPrompt = null;
+        });
+      }
     });
   }
+});
+
+// Handle successful installation
+window.addEventListener('appinstalled', () => {
+  console.log('PWA was installed successfully');
+  deferredPrompt = null;
 }); 
